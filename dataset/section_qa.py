@@ -31,7 +31,7 @@ class QASections:
 		self.qa_outputs = []
 		self.unformatted_indices = []
 
-	@classmethod
+	@staticmethod
 	def chunk_text(self, text):
 		chunks = []
 		for paragraph in text.split('\n'):
