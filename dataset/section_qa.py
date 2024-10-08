@@ -99,7 +99,7 @@ if __name__ == '__main__':
 
 	print ('Loading model from ', args.model_path)
 	model = Llama(
-		model_path = args.model_path,args = parser.parse_args(
+		model_path = args.model_path,
 		n_gpu_layers = -1,
 		chat_format='llama-3',
 		verbose=False,
