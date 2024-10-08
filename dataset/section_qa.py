@@ -92,7 +92,7 @@ class QASections:
 
 if __name__ == '__main__':
 	args = parser.parse_args()
-	text = open('text.txt', 'r').read()
+	text = open('text_sample.txt', 'r').read()
 	chunks = generator.chunk_text(text)
 	n_gpus = args.n_gpus
 	if n_gpus > 1:
