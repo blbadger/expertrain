@@ -96,7 +96,7 @@ if __name__ == '__main__':
 		chat_format='llama-3',
 		verbose=False,
 		n_ctx=8196,
-		temperature=0.4
+		temperature=0.2
 	)
 
 	text = """ Washington, D.C., formally the District of Columbia and commonly known as Washington or D.C., is the capital city and federal district of the United States. The city is on the Potomac River, across from Virginia, and shares land borders with Maryland to its north and east. It was named for George Washington, the first president of the United States. The district is named for Columbia, the female personification of the nation.
