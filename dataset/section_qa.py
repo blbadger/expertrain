@@ -93,13 +93,13 @@ class QASections:
 if __name__ == '__main__':
 	args = parser.parse_args()
 	text = open('text_sample.txt', 'r').read()
-	chunks = QAsections.chunk_text(text)
+	chunks = QASections.chunk_text(text)
 	n_gpus = args.n_gpus
 	if n_gpus > 1:
 		# divide chunks among GPUs
 		gpu_index = torch.cuda.current_device()
 		selected = len(chunks) // n_gpus
-		selected_chunks = self.chunks[gpu_index*selected: gpu_index*selected+selected]
+		selected_chunks = chunks[gpu_index*selected: gpu_index*selected+selected]
 
 	print ('Loading model from ', args.model_path)
 	model = Llama(
