@@ -97,7 +97,7 @@ if __name__ == '__main__':
 	n_gpus = int(args.n_gpus)
 	if n_gpus > 1:
 		# divide chunks among GPUs
-		gpu_index = args.gpu_i
+		gpu_index = int(args.gpu_i)
 		selected = int(len(chunks) // n_gpus)
 		start = gpu_index*selected
 		end = gpu_index*selected + selected
