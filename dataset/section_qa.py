@@ -67,18 +67,15 @@ class QASections:
 		return outputs
 
 	def format_qas(self):
-		qa_pairs = []
-		# expects self.qa_outputs to be JSON string
-		for arr in json.loads(self.qa_outputs):
-			qa_pairs += arr
-		print (qa_pairs)
-
 		formatted_outputs = []
-		for pair in qa_pairs:
-			question = pair["question"]
-			answer = pair["answer"]
-			formed_string = PROMPT_FORMAT.format(question, answer)
-			formatted_outputs.append({'text': formed_string})
+		for json_string in self.qa_outputs:
+			arr = list(json.loads(json_string))
+			for qa_pair in arr:
+				print (qa_pair)
+				question = pair["question"]
+				answer = pair["answer"]
+				formed_string = PROMPT_FORMAT.format(question, answer)
+				formatted_outputs.append({'text': formed_string})
 
 		with open(output_file, 'w') as f:
 			json.dump(formatted_outputs, f)
