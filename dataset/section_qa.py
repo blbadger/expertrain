@@ -31,7 +31,7 @@ class QASections:
 		self.qa_outputs = []
 		self.unformatted_indices = []
 
-	@staticmethod
+	@classmethod
 	def chunk_text(self, text):
 		chunks = []
 		for paragraph in text.split('\n'):
@@ -93,7 +93,7 @@ class QASections:
 if __name__ == '__main__':
 	args = parser.parse_args()
 	text = open('text_sample.txt', 'r').read()
-	chunks = generator.chunk_text(text)
+	chunks = QAsections.chunk_text(text)
 	n_gpus = args.n_gpus
 	if n_gpus > 1:
 		# divide chunks among GPUs
