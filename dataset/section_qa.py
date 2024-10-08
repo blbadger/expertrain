@@ -9,7 +9,7 @@ import argparse
 parser = argparse.ArgumentParser(description='Optional app description')
 parser.add_argument('--n_gpus', type=int)
 parser.add_argument('--model_path', type=str)
-parser.add_argumnet('--gpu_i', type=str)
+parser.add_argument('--gpu_i', type=str)
 print ('parser initialized')
 
 PROMPT_FORMAT = """
