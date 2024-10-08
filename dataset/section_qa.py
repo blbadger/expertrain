@@ -94,11 +94,12 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 	text = open('text_sample.txt', 'r').read()
 	chunks = QASections.chunk_text(text)
-	n_gpus = args.n_gpus
+	n_gpus = int(args.n_gpus)
 	if n_gpus > 1:
 		# divide chunks among GPUs
 		gpu_index = args.gpu_i
 		selected = len(chunks) // n_gpus
+		print (selected, gpu_index)
 		selected_chunks = chunks[gpu_index*selected: gpu_index*selected+selected]
 
 	print ('Loading model from ', args.model_path)
