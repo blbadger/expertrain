@@ -99,8 +99,10 @@ if __name__ == '__main__':
 		# divide chunks among GPUs
 		gpu_index = args.gpu_i
 		selected = len(chunks) // n_gpus
-		print (selected, gpu_index)
-		selected_chunks = chunks[gpu_index*selected: gpu_index*selected+selected]
+		start = gpu_index*selected
+		end = gpu_index*selected + selected
+		print (selected, gpu_index, len_chunks)
+		selected_chunks = chunks[start: end]
 
 	print ('Loading model from ', args.model_path)
 	model = Llama(
