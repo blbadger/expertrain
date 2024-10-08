@@ -69,6 +69,10 @@ class QASections:
 	def format_qas(self):
 		formatted_outputs = []
 		for json_string in self.qa_outputs:
+			print (json_string)
+			# add final brace if necessary
+			if json_string[-1] != '}':
+				json_string += '}'
 			arr = list(json.loads(json_string))
 			for qa_pair in arr:
 				print (qa_pair)
