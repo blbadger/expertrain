@@ -31,11 +31,13 @@ class QASections:
 		self.qa_outputs = []
 		self.unformatted_indices = []
 
-	def chunk_text(self):
-		for paragraph in self.text.split('\n'):
+	@classmethod
+	def chunk_text(self, text):
+		chunks = []
+		for paragraph in text.split('\n'):
 			if len(paragraph) > 1:
-				self.chunks.append(paragraph)
-		return
+				chunks.append(paragraph)
+		return chunks
 
 	def generate_qas(self):
 		# assumes dataset is loaded in memory
@@ -90,11 +92,13 @@ class QASections:
 
 if __name__ == '__main__':
 	args = parser.parse_args()
+	text = open('text.txt', 'r').read()
+	chunks = generator.chunk_text(text)
 	n_gpus = args.n_gpus
 	if n_gpus > 1:
 		# divide chunks among GPUs
 		gpu_index = torch.cuda.current_device()
-		selected = len(self.chunks) // n_gpus
+		selected = len(chunks) // n_gpus
 		selected_chunks = self.chunks[gpu_index*selected: gpu_index*selected+selected]
 
 	print ('Loading model from ', args.model_path)
@@ -108,8 +112,7 @@ if __name__ == '__main__':
 	)
 
 	output_path = '/home/bbadger/experiments/test_qas.json'
-	generator = QASections(model, text, output_path)
-	generator.chunk_text()
+	generator = QASections(model, selected_chunks, output_path)
 	generator.generate_qas()
 	generator.format_qas()
 
