@@ -32,6 +32,7 @@ class QASections:
 	def __init__(self, model, text):
 		self.model = model
 		self.text = text
+		self.output_file = '/home/bbadger/experiments/test_json.json'
 		self.chunks = []
 		self.qa_outputs = []
 
@@ -48,20 +49,24 @@ class QASections:
 		for chunk in tqdm(self.chunks):
 			if len(chunk) > 1:
 				output = model.create_chat_completion(
-				      messages = [
-						{"role": "system", "content": "You are helpful assistant responsible for creating good questions from text and answering them."},
-					        {
-					            "role": "user",
-					            "content": f"""
-									Given the following Context, give five insightful questions about the text and answer each one accurately in the following JSON format: {{"Question": "[insert question]", "Answer": "[insert answer]"}}. Answer in valid JSON with no other text.
+			      messages = [
+					{"role": "system", "content": "You are helpful assistant responsible for creating good questions from text and answering them."},
+				        {
+				            "role": "user",
+				            "content": f"""
+								Given the following Context, give five insightful questions about the text and answer each one accurately in the following JSON format: 
+								
+								{{"Question": "[insert question]", "Answer": "[insert answer]"}}
 
-									Context:
-									{chunk}
-								"""
-						        }
-							]
-						)
-				print (chunk, output)
+								Answer in valid JSON with no other text.
+
+								Context:
+								{chunk}
+							"""
+					        }
+						]
+					)
+				# print (chunk, output)
 				outputs.append(output["choices"][0]["message"]["content"])
 		self.qa_outputs = outputs
 		return outputs
@@ -82,7 +87,7 @@ class QASections:
 				formed_string = PROMPT_FORMAT.format(question, answer)
 				formatted_outputs.append({'text': formed_string})
 
-		with open(output_file, 'w') as f:
+		with open(self.output_file, 'w') as f:
 			json.dump(formatted_outputs, f)
 		return
 
