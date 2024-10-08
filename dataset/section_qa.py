@@ -18,6 +18,14 @@ print ('parser initialized')
 # 	selected = len(self.chunks) // n_gpus
 # 	selected_chunks = self.chunks[gpu_index*selected: gpu_index*selected+selected]
 
+PROMPT_FORMAT = """
+<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+
+You are a helpful assistant<|eot_id|><|start_header_id|>user<|end_header_id|>
+
+{}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+
+{}<|eot_id|>"""
 
 class QASections:
 
@@ -25,16 +33,17 @@ class QASections:
 		self.model = model
 		self.text = text
 		self.chunks = []
+		self.qa_outputs = []
 
 	def chunk_text(self):
 		for paragraph in self.text.split('\n'):
-			self.chunks.append(paragraph)
-		
+			if len(paragraph) > 1:
+				self.chunks.append(paragraph)
+		return
 
 	def generate_qas(self):
 		# assumes dataset may be loaded in memory
 		#text = load_dataset(path)
-
 		outputs = []
 		for chunk in tqdm(self.chunks):
 			if len(chunk) > 1:
@@ -54,12 +63,21 @@ class QASections:
 						)
 				print (chunk, output)
 				outputs.append(output)
-		return questions
-
+		self.qa_outputs = outputs
+		return outputs
 
 	def format_qas(self):
+		qa_pairs = []
+		for arr in self.qa_outputs:
+			qa_pairs += arr
+		print (qa_pairs)
+
+		formatted_outputs = []
+		for question, answer in qa_pairs:
+			formed_string = PROMPT_FORMAT.format(question, answer)
+			formatted_outputs.append({'text': formed_string})
 		with open(output_file, 'w') as f:
-			json.dump(outputs, f)
+			json.dump(formatted_outputs, f)
 		return
 
 
@@ -67,13 +85,13 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 	print ('Loading model from ', args.model_path)
 	model = Llama(
-	model_path = args.model_path,
-	n_gpu_layers = -1,
-	chat_format='llama-3',
-	verbose=False,
-	n_ctx=8196,
-	temperature=0.3
-	)		
+		model_path = args.model_path,
+		n_gpu_layers = -1,
+		chat_format='llama-3',
+		verbose=False,
+		n_ctx=8196,
+		temperature=0.3
+	)
 
 	text = """ Washington, D.C., formally the District of Columbia and commonly known as Washington or D.C., is the capital city and federal district of the United States. The city is on the Potomac River, across from Virginia, and shares land borders with Maryland to its north and east. It was named for George Washington, the first president of the United States. The district is named for Columbia, the female personification of the nation.
 
@@ -84,6 +102,7 @@ Designed in 1791 by Pierre Charles L'Enfant, the city is divided into quadrants,
 	generator = QASections(model, text)
 	generator.chunk_text()
 	generator.generate_qas()
+	generator.format_qas()
 
 
 
