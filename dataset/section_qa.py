@@ -97,7 +97,7 @@ if __name__ == '__main__':
 	n_gpus = args.n_gpus
 	if n_gpus > 1:
 		# divide chunks among GPUs
-		gpu_index = torch.cuda.current_device()
+		gpu_index = args.gpu_i
 		selected = len(chunks) // n_gpus
 		selected_chunks = chunks[gpu_index*selected: gpu_index*selected+selected]
 
