@@ -62,7 +62,7 @@ class QASections:
 							]
 						)
 				print (chunk, output)
-				outputs.append(output["choices"][0]["content"])
+				outputs.append(output["choices"][0]["message"]["content"])
 		self.qa_outputs = outputs
 		return outputs
 
