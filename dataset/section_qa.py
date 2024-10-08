@@ -53,7 +53,7 @@ class QASections:
 					        {
 					            "role": "user",
 					            "content": f"""
-									Given the following Context, give five insightful questions about the text and answer each one accurately in the following JSON format: {{"Question", "Answer"}}. Answer in correct JSON with no other text.
+									Given the following Context, give five insightful questions about the text and answer each one accurately in the following JSON format: {{"Question": [insert question], "Answer": [insert answer]}}. Answer in valid JSON with no other text.
 
 									Context:
 									{chunk}
