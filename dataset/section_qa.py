@@ -53,7 +53,7 @@ class QASections:
 					        {
 					            "role": "user",
 					            "content": f"""
-									Given the following Context, give five insightful questions about the text and answer each one accurately in the following JSON format: {{"Question", "Answer"}}. Answer in valid JSON with no other text.
+									Given the following Context, give five insightful questions about the text and answer each one accurately in the following JSON format: {{"Question", "Answer"}}. Answer in correct JSON with no other text.
 
 									Context:
 									{chunk}
@@ -77,8 +77,8 @@ class QASections:
 			arr = list(json.loads('[' + json_string + ']'))
 			for qa_pair in arr:
 				print (qa_pair)
-				question = pair["Question"]
-				answer = pair["Answer"]
+				question = qa_pair["Question"]
+				answer = qa_pair["Answer"]
 				formed_string = PROMPT_FORMAT.format(question, answer)
 				formatted_outputs.append({'text': formed_string})
 
@@ -96,7 +96,7 @@ if __name__ == '__main__':
 		chat_format='llama-3',
 		verbose=False,
 		n_ctx=8196,
-		temperature=0.3
+		temperature=0.4
 	)
 
 	text = """ Washington, D.C., formally the District of Columbia and commonly known as Washington or D.C., is the capital city and federal district of the United States. The city is on the Potomac River, across from Virginia, and shares land borders with Maryland to its north and east. It was named for George Washington, the first president of the United States. The district is named for Columbia, the female personification of the nation.
