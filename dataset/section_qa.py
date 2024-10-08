@@ -62,20 +62,24 @@ class QASections:
 							]
 						)
 				print (chunk, output)
-				outputs.append(output)
+				outputs.append(output["choices"][0]["content"])
 		self.qa_outputs = outputs
 		return outputs
 
 	def format_qas(self):
 		qa_pairs = []
-		for arr in self.qa_outputs:
+		# expects self.qa_outputs to be JSON string
+		for arr in json.loads(self.qa_outputs):
 			qa_pairs += arr
 		print (qa_pairs)
 
 		formatted_outputs = []
-		for question, answer in qa_pairs:
+		for pair in qa_pairs:
+			question = pair["question"]
+			answer = pair["answer"]
 			formed_string = PROMPT_FORMAT.format(question, answer)
 			formatted_outputs.append({'text': formed_string})
+
 		with open(output_file, 'w') as f:
 			json.dump(formatted_outputs, f)
 		return
