@@ -79,6 +79,7 @@ class QASections:
 				)
 				# print (chunk, output)
 				outputs.append(output["choices"][0]["message"]["content"])
+				print (chunk, outputs)
 
 		self.qa_outputs = outputs
 		return outputs
@@ -112,7 +113,7 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 	text = open('text_sample.txt', 'r').read()
 	chunks = QASections.chunk_text_nearest(text)
-	print (chunks)
+	print (len(chunks))
 	n_gpus = int(args.n_gpus)
 	if n_gpus > 1:
 		# divide chunks among GPUs
