@@ -124,8 +124,9 @@ if __name__ == '__main__':
 		end = gpu_index*selected + selected
 		# split remainder chunks evenly among GPUs
 		if remainder - gpu_index > 0:
-			extra_chunk = chunks[-remainder - gpu_index]
-			print (f'GPU {gpu_index}: processing chunks [{start}: {end}] and {remainder}')
+			extra_index = -(remainder - gpu_index)
+			extra_chunk = [chunks[extra_index]]
+			print (f'GPU {gpu_index}: processing chunks [{start}: {end}] and {extra_index}')
 		else:
 			extra_chunk = []
 			print (f'GPU {gpu_index}: processing chunks [{start}: {end}]')
