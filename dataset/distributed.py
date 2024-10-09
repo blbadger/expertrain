@@ -13,6 +13,7 @@ print ('parser initialized')
 if __name__ == "__main__":
 	args = parser.parse_args()
 	n_gpus = torch.cuda.device_count()
+	model_path = args.model_path
 	bash_string = ""
 	for gpu_index in range(n_gpus):
 		bash_string += template.format(gpu_index, n_gpus, model_path)
