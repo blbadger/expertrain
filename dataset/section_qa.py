@@ -9,10 +9,9 @@ import argparse
 parser = argparse.ArgumentParser(description='Optional app description')
 parser.add_argument('--n_gpus', type=int)
 parser.add_argument('--model_path', type=str)
-parser.add_argument('--gpu_i', type=str)
-print ('parser initialized')
+parser.add_argument('--gpu_i', type=int)
 
-PROMPT_FORMAT = """
+LLAMA_PROMPT_FORMAT = """
 <|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
 You are a helpful assistant<|eot_id|><|start_header_id|>user<|end_header_id|>
@@ -31,12 +30,27 @@ class QASections:
 		self.qa_outputs = []
 		self.unformatted_indices = []
 
+
 	@classmethod
-	def chunk_text(self, text):
+	def chunk_text_newlines(self, text, batch_size=7):
 		chunks = []
-		for paragraph in text.split('\n'):
-			if len(paragraph) > 1:
-				chunks.append(paragraph)
+		paragraphs = [p for p in text.split('\n') if len(i) > 1]
+		for i in range(0, len_paragraphs, page_length):
+			chunk = '\n'.join(paragraphs[i:i+page_length])
+			chunks.append(chunk)
+		return chunks
+
+	@classmethod
+	def chunk_text_nearest(self, text, n_char=2000):
+		chunks = []
+		start = 0
+		while start < len(text):
+			end = start + n_char
+			# continue until newline is found
+			while text[end] != '/n':
+				end += 1
+			chunks.append(text[start:end])
+			start = end + 1 # ignore newline for next text extract
 		return chunks
 
 	def generate_qas(self):
@@ -64,7 +78,7 @@ class QASections:
 				)
 				# print (chunk, output)
 				outputs.append(output["choices"][0]["message"]["content"])
-		print (outputs)
+
 		self.qa_outputs = outputs
 		return outputs
 
@@ -84,7 +98,7 @@ class QASections:
 			for qa_pair in arr:
 				question = qa_pair["Question"]
 				answer = qa_pair["Answer"]
-				formed_string = PROMPT_FORMAT.format(question, answer)
+				formed_string = LLAMA_PROMPT_FORMAT.format(question, answer)
 				formatted_outputs.append({'text': formed_string})
 
 		with open(self.output_file, 'w') as f:
@@ -96,7 +110,7 @@ class QASections:
 if __name__ == '__main__':
 	args = parser.parse_args()
 	text = open('text_sample.txt', 'r').read()
-	chunks = QASections.chunk_text(text)
+	chunks = QASections.chunk_text_nearest(text)
 	n_gpus = int(args.n_gpus)
 	if n_gpus > 1:
 		# divide chunks among GPUs
@@ -121,8 +135,4 @@ if __name__ == '__main__':
 	generator = QASections(model, selected_chunks, output_path)
 	generator.generate_qas()
 	generator.format_qas()
-
-
-
-
 
