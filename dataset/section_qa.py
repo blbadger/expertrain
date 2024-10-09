@@ -50,7 +50,7 @@ class QASections:
 				        {
 			            "role": "user",
 			            "content": f"""
-							Given the following Context, give five unique and insightful questions about the text and answer each one accurately in the following JSON format: 
+							Given the following Context, give five insightful questions about the text and answer each one accurately in the following JSON format: 
 							
 							{{"Question": "[insert question]", "Answer": "[insert answer]"}}
 
@@ -64,6 +64,7 @@ class QASections:
 				)
 				# print (chunk, output)
 				outputs.append(output["choices"][0]["message"]["content"])
+		print (chunk, outputs)
 		self.qa_outputs = outputs
 		return outputs
 
@@ -85,7 +86,6 @@ class QASections:
 				answer = qa_pair["Answer"]
 				formed_string = PROMPT_FORMAT.format(question, answer)
 				formatted_outputs.append({'text': formed_string})
-			print (formatted_outputs)
 
 		with open(self.output_file, 'w') as f:
 			json.dump(formatted_outputs, f)
