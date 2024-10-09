@@ -126,10 +126,10 @@ if __name__ == '__main__':
 		if remainder - gpu_index > 0:
 			extra_index = -(remainder - gpu_index)
 			extra_chunk = [chunks[extra_index]]
-			print (f'GPU {gpu_index}: processing chunks [{start}: {end}] and {extra_index}')
+			print (f'GPU {gpu_index}: processing chunks [{start}: {end}) and {len(chunks)-extra_index}')
 		else:
 			extra_chunk = []
-			print (f'GPU {gpu_index}: processing chunks [{start}: {end}]')
+			print (f'GPU {gpu_index}: processing chunks [{start}: {end})')
 		selected_chunks = chunks[start: end] + extra_chunk
 
 	print ('Loading model from ', args.model_path)
