@@ -1,5 +1,6 @@
 import argparse
 import subprocess
+import torch
 
 template = "CUDA_VISIBLE_DEVICES={} section_qa.py --n_gpus {} --model_path {} &\n"
 

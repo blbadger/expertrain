@@ -89,6 +89,7 @@ class QASections:
 
 		with open(self.output_file, 'w') as f:
 			json.dump(formatted_outputs, f)
+		print ('json dumped')
 		return
 
 
