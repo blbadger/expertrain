@@ -103,7 +103,7 @@ class QASections:
 
 		with open(self.output_file, 'w') as f:
 			json.dump(formatted_outputs, f)
-		print ('json dumped')
+		print (f'json dumped: bad sections, {self.unformatted_inpus}')
 		return
 
 
@@ -142,7 +142,7 @@ if __name__ == '__main__':
 				print (f'GPU {gpu_index}: processing chunks of indices [{start}: {end})')
 			selected_chunks = chunks[start: end] + extra_chunk
 
-		output_path = f'/home/bbadger/experiments/github_pages.json'
+		output_path = f'/home/bbadger/experiments/github_pages_{char_lim}.json'
 		generator = QASections(model, selected_chunks, output_path)
 		generator.generate_qas()
 		generator.format_qas()
