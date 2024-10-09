@@ -117,7 +117,7 @@ if __name__ == '__main__':
 			chat_format='llama-3',
 			verbose=False,
 			n_ctx=8196,
-			temperature=0.2
+			temperature=0.2 # generally should be low for factual q/a in semi-correct JSON
 		)
 	# if more than one char limit given, none should be multiples of any other
 	char_limits = [1000, 2500, 6500]
@@ -136,13 +136,13 @@ if __name__ == '__main__':
 			if remainder - gpu_index > 0:
 				extra_index = -(remainder - gpu_index)
 				extra_chunk = [chunks[extra_index]]
-				print (f'GPU {gpu_index}: processing chunks [{start}: {end}) and {len(chunks)+extra_index}')
+				print (f'GPU {gpu_index}: processing chunks of indices [{start}: {end}) and {len(chunks)+extra_index}')
 			else:
 				extra_chunk = []
-				print (f'GPU {gpu_index}: processing chunks [{start}: {end})')
+				print (f'GPU {gpu_index}: processing chunks of indices [{start}: {end})')
 			selected_chunks = chunks[start: end] + extra_chunk
 
-		output_path = f'/home/bbadger/experiments/qas_{char_lim}.json'
+		output_path = f'../data/qas_{char_lim}.json'
 		generator = QASections(model, selected_chunks, output_path)
 		generator.generate_qas()
 		generator.format_qas()
