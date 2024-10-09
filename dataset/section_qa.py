@@ -50,7 +50,7 @@ class QASections:
 				        {
 			            "role": "user",
 			            "content": f"""
-							Given the following Context, give five insightful questions about the text and answer each one accurately in the following JSON format: 
+							Given the following Context, give five unique and insightful questions about the text and answer each one accurately in the following JSON format: 
 							
 							{{"Question": "[insert question]", "Answer": "[insert answer]"}}
 
@@ -78,6 +78,7 @@ class QASections:
 				arr = list(json.loads('[' + json_string + ']'))
 			except:
 				self.unformatted_indices.append(i)
+				arr = []
 
 			for qa_pair in arr:
 				question = qa_pair["Question"]
