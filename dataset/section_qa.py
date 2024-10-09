@@ -118,10 +118,16 @@ if __name__ == '__main__':
 	if n_gpus > 1:
 		# divide chunks among GPUs
 		gpu_index = int(args.gpu_i)
-		selected = int(len(chunks) // n_gpus)
+		selected = int(len(chunks) // n_gpus) 
+		remainder = len(chunks) % n_gpus 
 		start = gpu_index*selected
 		end = gpu_index*selected + selected
-		print (f'GPU {gpu_index}: processing chunks [{start}: {end}]')
+		# split remainder chunks evenly among GPUs
+		if remainder - gpu_index > 0:
+			extra_chunk = chunk[-remainder - gpu_index]
+			print (f'GPU {gpu_index}: processing chunks [{start}: {end}] and {remainder}')
+		else:
+			print (f'GPU {gpu_index}: processing chunks [{start}: {end}]')
 		selected_chunks = chunks[start: end]
 
 	print ('Loading model from ', args.model_path)
