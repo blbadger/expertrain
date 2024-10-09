@@ -119,7 +119,8 @@ if __name__ == '__main__':
 			n_ctx=8196,
 			temperature=0.2
 		)
-	char_limits = [1000, 2000, 5000]
+	# if more than one char limit given, none should be multiples of any other
+	char_limits = [1000, 2500, 6500]
 	for char_lim in char_limits:
 		chunks = QASections.chunk_text_nearest(text, n_char=char_lim)
 		print ('Chunks to process: ', len(chunks))
