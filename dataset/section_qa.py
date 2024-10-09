@@ -110,6 +110,15 @@ class QASections:
 if __name__ == '__main__':
 	args = parser.parse_args()
 	text = open('text_sample.txt', 'r').read()
+	print ('Loading model from ', args.model_path)
+	model = Llama(
+			model_path = args.model_path,
+			n_gpu_layers = -1,
+			chat_format='llama-3',
+			verbose=False,
+			n_ctx=8196,
+			temperature=0.2
+		)
 	char_limits = [1000, 2000, 5000]
 	for char_lim in char_limits:
 		chunks = QASections.chunk_text_nearest(text, n_char=char_lim)
@@ -131,16 +140,6 @@ if __name__ == '__main__':
 				extra_chunk = []
 				print (f'GPU {gpu_index}: processing chunks [{start}: {end})')
 			selected_chunks = chunks[start: end] + extra_chunk
-
-		print ('Loading model from ', args.model_path)
-		model = Llama(
-			model_path = args.model_path,
-			n_gpu_layers = -1,
-			chat_format='llama-3',
-			verbose=False,
-			n_ctx=8196,
-			temperature=0.2
-		)
 
 		output_path = f'/home/bbadger/experiments/qas_{char_lim}.json'
 		generator = QASections(model, selected_chunks, output_path)
