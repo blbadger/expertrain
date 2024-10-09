@@ -57,7 +57,6 @@ class QASections:
 		# assumes dataset is loaded in memory
 		outputs = []
 		for chunk in tqdm(self.chunks):
-			print (chunks)
 			if len(chunk) > 1:
 				output = model.create_chat_completion(
 			      messages = [
@@ -79,7 +78,6 @@ class QASections:
 				)
 				# print (chunk, output)
 				outputs.append(output["choices"][0]["message"]["content"])
-				print (chunk, outputs)
 
 		self.qa_outputs = outputs
 		return outputs
@@ -112,38 +110,40 @@ class QASections:
 if __name__ == '__main__':
 	args = parser.parse_args()
 	text = open('text_sample.txt', 'r').read()
-	chunks = QASections.chunk_text_nearest(text)
-	print (len(chunks))
-	n_gpus = int(args.n_gpus)
-	if n_gpus > 1:
-		# divide chunks among GPUs
-		gpu_index = int(args.gpu_i)
-		selected = int(len(chunks) // n_gpus) 
-		remainder = len(chunks) % n_gpus 
-		start = gpu_index*selected
-		end = gpu_index*selected + selected
-		# split remainder chunks evenly among GPUs
-		if remainder - gpu_index > 0:
-			extra_index = -(remainder - gpu_index)
-			extra_chunk = [chunks[extra_index]]
-			print (f'GPU {gpu_index}: processing chunks [{start}: {end}) and {len(chunks)-extra_index}')
-		else:
-			extra_chunk = []
-			print (f'GPU {gpu_index}: processing chunks [{start}: {end})')
-		selected_chunks = chunks[start: end] + extra_chunk
+	char_limits = [1000, 2000, 5000]
+	for char_lim in char_limits:
+		chunks = QASections.chunk_text_nearest(text, n_char=char_lim)
+		print ('Chunks to process: ', len(chunks))
+		n_gpus = int(args.n_gpus)
+		if n_gpus > 1:
+			# divide chunks among GPUs
+			gpu_index = int(args.gpu_i)
+			selected = int(len(chunks) // n_gpus) 
+			remainder = len(chunks) % n_gpus 
+			start = gpu_index*selected
+			end = gpu_index*selected + selected
+			# split remainder chunks evenly among GPUs
+			if remainder - gpu_index > 0:
+				extra_index = -(remainder - gpu_index)
+				extra_chunk = [chunks[extra_index]]
+				print (f'GPU {gpu_index}: processing chunks [{start}: {end}) and {len(chunks)+extra_index}')
+			else:
+				extra_chunk = []
+				print (f'GPU {gpu_index}: processing chunks [{start}: {end})')
+			selected_chunks = chunks[start: end] + extra_chunk
 
-	print ('Loading model from ', args.model_path)
-	model = Llama(
-		model_path = args.model_path,
-		n_gpu_layers = -1,
-		chat_format='llama-3',
-		verbose=False,
-		n_ctx=8196,
-		temperature=0.2
-	)
+		print ('Loading model from ', args.model_path)
+		model = Llama(
+			model_path = args.model_path,
+			n_gpu_layers = -1,
+			chat_format='llama-3',
+			verbose=False,
+			n_ctx=8196,
+			temperature=0.2
+		)
 
-	output_path = '/home/bbadger/experiments/test_qas.json'
-	generator = QASections(model, selected_chunks, output_path)
-	generator.generate_qas()
-	generator.format_qas()
+		output_path = f'/home/bbadger/experiments/qas_{char_lim}.json'
+		generator = QASections(model, selected_chunks, output_path)
+		generator.generate_qas()
+		generator.format_qas()
 
