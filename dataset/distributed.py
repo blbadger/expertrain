@@ -2,7 +2,7 @@ import argparse
 import subprocess
 import torch
 
-template = "CUDA_VISIBLE_DEVICES={} section_qa.py --n_gpus {} --model_path {} &\n"
+template = "CUDA_VISIBLE_DEVICES={} python section_qa.py --n_gpus {} --model_path {} &\n"
 
 # Instantiate the parser
 parser = argparse.ArgumentParser(description='Optional app description')
