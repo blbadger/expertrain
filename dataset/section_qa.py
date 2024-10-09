@@ -84,6 +84,7 @@ class QASections:
 				answer = qa_pair["Answer"]
 				formed_string = PROMPT_FORMAT.format(question, answer)
 				formatted_outputs.append({'text': formed_string})
+			print (formatted_outputs)
 
 		with open(self.output_file, 'w') as f:
 			json.dump(formatted_outputs, f)
@@ -101,7 +102,7 @@ if __name__ == '__main__':
 		selected = int(len(chunks) // n_gpus)
 		start = gpu_index*selected
 		end = gpu_index*selected + selected
-		print (selected, gpu_index, len_chunks)
+		print (f'GPU {gpu_index} processing chunks [start, end]')
 		selected_chunks = chunks[start: end]
 
 	print ('Loading model from ', args.model_path)
