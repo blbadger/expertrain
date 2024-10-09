@@ -43,7 +43,6 @@ class QASections:
 		# assumes dataset is loaded in memory
 		outputs = []
 		for chunk in tqdm(self.chunks):
-			print (chunk)
 			if len(chunk) > 1:
 				output = model.create_chat_completion(
 			      messages = [
@@ -65,7 +64,7 @@ class QASections:
 				)
 				# print (chunk, output)
 				outputs.append(output["choices"][0]["message"]["content"])
-		print (chunk, outputs)
+		print (outputs)
 		self.qa_outputs = outputs
 		return outputs
 
