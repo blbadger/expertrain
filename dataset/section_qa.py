@@ -43,6 +43,7 @@ class QASections:
 		# assumes dataset is loaded in memory
 		outputs = []
 		for chunk in tqdm(self.chunks):
+			print (chunk)
 			if len(chunk) > 1:
 				output = model.create_chat_completion(
 			      messages = [
@@ -103,7 +104,7 @@ if __name__ == '__main__':
 		selected = int(len(chunks) // n_gpus)
 		start = gpu_index*selected
 		end = gpu_index*selected + selected
-		print (f'GPU {gpu_index}: processing chunks [{start}, {end}]')
+		print (f'GPU {gpu_index}: processing chunks [{start}: {end}]')
 		selected_chunks = chunks[start: end]
 
 	print ('Loading model from ', args.model_path)
