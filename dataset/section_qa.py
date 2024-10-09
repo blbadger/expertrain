@@ -23,11 +23,11 @@ You are a helpful assistant<|eot_id|><|start_header_id|>user<|end_header_id|>
 
 class QASections:
 
-	def __init__(self, model, text, output_path):
+	def __init__(self, model, chunks, output_path):
 		self.model = model
 		self.text = text
 		self.output_file = output_path
-		self.chunks = []
+		self.chunks = chunks
 		self.qa_outputs = []
 		self.unformatted_indices = []
 
@@ -102,7 +102,7 @@ if __name__ == '__main__':
 		selected = int(len(chunks) // n_gpus)
 		start = gpu_index*selected
 		end = gpu_index*selected + selected
-		print (f'GPU {gpu_index} processing chunks [start, end]')
+		print (f'GPU {gpu_index}: processing chunks [{start}, {end}]')
 		selected_chunks = chunks[start: end]
 
 	print ('Loading model from ', args.model_path)
