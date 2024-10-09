@@ -109,7 +109,7 @@ class QASections:
 
 if __name__ == '__main__':
 	args = parser.parse_args()
-	text = open('text_sample.txt', 'r').read()
+	text = open('data/text_sample.txt', 'r').read()
 	print ('Loading model from ', args.model_path)
 	model = Llama(
 			model_path = args.model_path,
@@ -142,7 +142,7 @@ if __name__ == '__main__':
 				print (f'GPU {gpu_index}: processing chunks of indices [{start}: {end})')
 			selected_chunks = chunks[start: end] + extra_chunk
 
-		output_path = f'../data/qas_{char_lim}.json'
+		output_path = f'data/qas_{char_lim}.json'
 		generator = QASections(model, selected_chunks, output_path)
 		generator.generate_qas()
 		generator.format_qas()
