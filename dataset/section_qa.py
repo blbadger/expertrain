@@ -47,7 +47,7 @@ class QASections:
 		while start < len(text):
 			end = start + n_char
 			# continue until newline is found
-			while text[end] != '/n' and end < len(text):
+			while end < len(text) and text[end] != '/n':
 				end += 1
 			chunks.append(text[start:end])
 			start = end + 1 # ignore newline for next text extract
