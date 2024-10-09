@@ -46,8 +46,11 @@ class QASections:
 		start = 0
 		while start < len(text):
 			end = start + n_char
+			if end >= len(text):
+				chunks.append(text[start:])
+				break
 			# continue until newline is found
-			while end < len(text) and text[end] != '/n':
+			while text[end] != '/n':
 				end += 1
 			chunks.append(text[start:end])
 			start = end + 1 # ignore newline for next text extract
@@ -112,7 +115,7 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 	text = open('text_sample.txt', 'r').read()
 	chunks = QASections.chunk_text_nearest(text)
-	print (len(chunks))
+	print (chunks)
 	n_gpus = int(args.n_gpus)
 	if n_gpus > 1:
 		# divide chunks among GPUs
