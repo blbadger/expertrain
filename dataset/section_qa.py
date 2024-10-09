@@ -57,6 +57,7 @@ class QASections:
 		# assumes dataset is loaded in memory
 		outputs = []
 		for chunk in tqdm(self.chunks):
+			print (chunks)
 			if len(chunk) > 1:
 				output = model.create_chat_completion(
 			      messages = [
@@ -111,6 +112,7 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 	text = open('text_sample.txt', 'r').read()
 	chunks = QASections.chunk_text_nearest(text)
+	print (len(chunks))
 	n_gpus = int(args.n_gpus)
 	if n_gpus > 1:
 		# divide chunks among GPUs
