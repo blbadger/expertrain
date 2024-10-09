@@ -2,7 +2,7 @@ import argparse
 import subprocess
 import torch
 
-template = "CUDA_VISIBLE_DEVICES={} python section_qa.py --n_gpus {} --model_path {} &\n"
+template = "CUDA_VISIBLE_DEVICES={} python section_qa.py --n_gpus {} --gpu_i {} --model_path {} &\n"
 
 # Instantiate the parser
 parser = argparse.ArgumentParser(description='Optional app description')
@@ -16,7 +16,7 @@ if __name__ == "__main__":
 	model_path = args.model_path
 	bash_string = ""
 	for gpu_index in range(n_gpus):
-		bash_string += template.format(gpu_index, n_gpus, model_path)
+		bash_string += template.format(gpu_index, n_gpus, gpu_index, model_path)
 
 	print (f'Running string: {bash_string}')
 	subprocess.run(bash_string, shell=True)
