@@ -65,8 +65,11 @@ class QASections:
 			            "role": "user",
 			            "content": f"""
 							Given the following Context, give five insightful questions about the text and answer each one accurately in the following JSON format: 
-							
-							{{"Question": "[insert question]", "Answer": "[insert answer]"}}
+							[
+								{{"Question": "[insert question]", "Answer": "[insert answer]"}},
+								{{"question": "[insert question]", "Answer": "[insert answer]"}},
+								...
+							]		
 
 							Answer in valid JSON with no other text.
 
@@ -76,7 +79,6 @@ class QASections:
 					    }
 					]
 				)
-				# print (chunk, output)
 				outputs.append(output["choices"][0]["message"]["content"])
 
 		self.qa_outputs = outputs
@@ -86,12 +88,17 @@ class QASections:
 		formatted_outputs = []
 		for i, json_string in enumerate(self.qa_outputs):
 			# add final brace if necessary
-			if json_string[-1] != '}':
+			if json_string[-1] == '"':
 				json_string += '}'
+			if json_string[-1] != "]":
+				json_string = json_string + "]"
+			if json_string[0] != "[":
+				json_string = "[" + json_string
 
 			try:
-				arr = list(json.loads('[' + json_string + ']'))
+				arr = list(json.loads(json_string))
 			except:
+				print ('Bad json: ', json_string )
 				self.unformatted_indices.append(i)
 				arr = []
 
@@ -109,7 +116,7 @@ class QASections:
 
 if __name__ == '__main__':
 	args = parser.parse_args()
-	text = open('data/github_pages/all_pages.md', 'r').read()
+	text = open('data/text_sample.txt', 'r').read()
 	print ('Loading model from ', args.model_path)
 	model = Llama(
 			model_path = args.model_path,
