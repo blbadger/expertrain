@@ -13,6 +13,7 @@ parser = argparse.ArgumentParser(description='Optional app description')
 parser.add_argument('--n_gpus', type=int)
 parser.add_argument('--model_path', type=str)
 parser.add_argument('--gpu_i', type=int)
+parser.add_argument('--output_path', type=str)
 
 LLAMA_PROMPT_FORMAT = """
 <|begin_of_text|><|start_header_id|>system<|end_header_id|>
@@ -151,7 +152,7 @@ if __name__ == '__main__':
 		formatted_outputs = generator.format_qas()
 		all_outputs += formatted_outputs
 
-	output_path = f'/home/bbadger/experiments/github_pages_qas'
+	output_path = args.output_path
 	with open(output_path, 'wb') as f:
 		pickle.dump(formatted_outputs, f)
 		print ('Outputs saved')
