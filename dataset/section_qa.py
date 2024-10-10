@@ -152,7 +152,7 @@ if __name__ == '__main__':
 		formatted_outputs = generator.format_qas()
 		all_outputs += formatted_outputs
 
-	output_path = args.output_path
+	output_path = args.output_path + f'_{gpu_index}'
 	with open(output_path, 'wb') as f:
 		pickle.dump(formatted_outputs, f)
 		print ('Outputs saved')
