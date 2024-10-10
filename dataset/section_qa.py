@@ -25,10 +25,9 @@ You are a helpful assistant<|eot_id|><|start_header_id|>user<|end_header_id|>
 
 class QASections:
 
-	def __init__(self, model, chunks, output_path):
+	def __init__(self, model, chunks):
 		self.model = model
 		self.text = text
-		self.output_file = output_path
 		self.chunks = chunks
 		self.qa_outputs = []
 		self.unformatted_indices = []
@@ -87,7 +86,7 @@ class QASections:
 		self.qa_outputs = outputs
 		return outputs
 
-	def format_qas(self, save=True):
+	def format_qas(self):
 		formatted_outputs = []
 		for i, string in enumerate(self.qa_outputs):
 			question_chars = len('"Question": ')
@@ -108,10 +107,7 @@ class QASections:
 				formed_string = LLAMA_PROMPT_FORMAT.format(question, answer)
 				formatted_outputs.append({"text": formed_string})
 
-		if save:
-			with open(self.output_file, 'wb') as f:
-				pickle.dump(formatted_outputs, f)
-		return
+		return formatted_outputs
 
 
 if __name__ == '__main__':
@@ -127,7 +123,8 @@ if __name__ == '__main__':
 			temperature=0.2 # generally should be low for factual q/a in semi-correct JSON
 		)
 	# if more than one char limit given, none should be multiples of any other
-	char_limits = [1000, 2500, 6500]
+	char_limits = [1000, 2500, 6500, 10500]
+	all_outputs = []
 	for char_lim in char_limits:
 		chunks = QASections.chunk_text_nearest(text, n_char=char_lim)
 		print ('Chunks to process: ', len(chunks))
@@ -149,8 +146,13 @@ if __name__ == '__main__':
 				print (f'GPU {gpu_index}: processing chunks of indices [{start}: {end})')
 			selected_chunks = chunks[start: end] + extra_chunk
 
-		output_path = f'/home/bbadger/experiments/github_pages_{char_lim}'
-		generator = QASections(model, selected_chunks, output_path)
+		generator = QASections(model, selected_chunks)
 		generator.generate_qas()
-		generator.format_qas()
+		formatted_outputs = generator.format_qas()
+		all_outputs += formatted_outputs
+
+	output_path = f'/home/bbadger/experiments/github_pages_{char_lim}'
+	with open(output_path, 'wb') as f:
+		pickle.dump(formatted_outputs, f)
+		print ('Outputs saved')
 
