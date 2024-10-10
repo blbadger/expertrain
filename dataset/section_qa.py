@@ -88,7 +88,7 @@ class QASections:
 
 	def format_qas(self):
 		formatted_outputs = []
-		for i, json_string in enumerate(self.qa_outputs):
+		for i, string in enumerate(self.qa_outputs):
 			# add first and final braces/brackets if necessary
 			if string[-1] == '"':
 				string += '}'
