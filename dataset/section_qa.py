@@ -110,10 +110,11 @@ class QASections:
 				question = qa_pair["Question"]
 				answer = qa_pair["Answer"]
 				formed_string = LLAMA_PROMPT_FORMAT.format(question, answer)
-				formatted_outputs.append({'text': formed_string})
+				formatted_outputs.append({"text": formed_string})
 
-		pickle.dump(formatted_outputs, open(self.output_file), 'wb')
 		print (f'Array dumped: bad sections, {self.unformatted_indices}')
+		with open(self.output_file) as f:
+			pickle.dump(formatted_outputs, f, 'wb')
 		return
 
 
