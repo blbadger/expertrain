@@ -86,7 +86,7 @@ class QASections:
 		self.qa_outputs = outputs
 		return outputs
 
-	def format_qas(self):
+	def format_qas(self, save=True):
 		formatted_outputs = []
 		for i, string in enumerate(self.qa_outputs):
 			question_chars = len('"Question": ')
@@ -107,8 +107,9 @@ class QASections:
 				formed_string = LLAMA_PROMPT_FORMAT.format(question, answer)
 				formatted_outputs.append({"text": formed_string})
 
-		with open(self.output_file, 'wb') as f:
-			pickle.dump(formatted_outputs, f)
+		if save:
+			with open(self.output_file, 'wb') as f:
+				pickle.dump(formatted_outputs, f)
 		return
 
 
@@ -147,7 +148,7 @@ if __name__ == '__main__':
 				print (f'GPU {gpu_index}: processing chunks of indices [{start}: {end})')
 			selected_chunks = chunks[start: end] + extra_chunk
 
-		output_path = f'/home/bbadger/experiments/github_pages_{char_lim}.json'
+		output_path = f'/home/bbadger/experiments/github_pages_{char_lim}'
 		generator = QASections(model, selected_chunks, output_path)
 		generator.generate_qas()
 		generator.format_qas()
