@@ -112,8 +112,6 @@ class QASections:
 				formed_string = LLAMA_PROMPT_FORMAT.format(question, answer)
 				formatted_outputs.append({"text": formed_string})
 
-		print (f'Array dumped: bad sections, {self.unformatted_indices}')
-		print (f'Formatted outputs: {formatted_outputs}')
 		with open(self.output_file, 'wb') as f:
 			pickle.dump(formatted_outputs, f)
 		return
@@ -121,7 +119,7 @@ class QASections:
 
 if __name__ == '__main__':
 	args = parser.parse_args()
-	text = open('data/text_sample.txt', 'r').read()
+	text = open('data/github_pages/all_pages.md', 'r').read()
 	print ('Loading model from ', args.model_path)
 	model = Llama(
 			model_path = args.model_path,
