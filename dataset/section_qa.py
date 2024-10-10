@@ -1,11 +1,10 @@
 from llama_cpp import Llama
 import json
-from datasets import load_dataset
+from datasets import load_dataset, Dataset
 from tqdm import tqdm
 import torch
 import argparse
 import ast
-import pickle
 import re
 
 # Instantiate the parser
@@ -152,8 +151,8 @@ if __name__ == '__main__':
 		formatted_outputs = generator.format_qas()
 		all_outputs += formatted_outputs
 
-	output_path = args.output_path + f'_{gpu_index}'
-	with open(output_path, 'wb') as f:
-		pickle.dump(all_outputs, f)
-		print ('Outputs saved')
+	output_path = args.output_path + f'_{gpu_index}' # add identifier for each thread
+	dataset = Dataset.from_list(all_outputs)
+	dataset.save_to_disk(output_path)
+	print ('Outputs saved')
 
