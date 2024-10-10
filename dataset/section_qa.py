@@ -115,7 +115,7 @@ class QASections:
 		print (f'Array dumped: bad sections, {self.unformatted_indices}')
 		print (f'Formatted outputs: {formatted_outputs}')
 		with open(self.output_file, 'wb') as f:
-			pickle.dump(formatted_outputs)
+			pickle.dump(formatted_outputs, f)
 		return
 
 
