@@ -4,6 +4,8 @@ from datasets import load_dataset
 from tqdm import tqdm
 import torch
 import argparse
+import ast
+import pickle
 
 # Instantiate the parser
 parser = argparse.ArgumentParser(description='Optional app description')
@@ -67,7 +69,7 @@ class QASections:
 							Given the following Context, give five insightful questions about the text and answer each one accurately in the following JSON format: 
 							[
 								{{"Question": "[insert question]", "Answer": "[insert answer]"}},
-								{{"question": "[insert question]", "Answer": "[insert answer]"}},
+								{{"Question": "[insert question]", "Answer": "[insert answer]"}},
 								...
 							]		
 
@@ -87,18 +89,20 @@ class QASections:
 	def format_qas(self):
 		formatted_outputs = []
 		for i, json_string in enumerate(self.qa_outputs):
-			# add final brace if necessary
-			if json_string[-1] == '"':
-				json_string += '}'
-			if json_string[-1] != "]":
-				json_string = json_string + "]"
-			if json_string[0] != "[":
-				json_string = "[" + json_string
+			# add first and final braces/brackets if necessary
+			if string[-1] == '"':
+				string += '}'
+			if string[0] == '"':
+				string = '{' + json_string
+			if string[-1] != "]":
+				string = json_string + "]"
+			if string[0] != "[":
+				string = "[" + json_string
 
 			try:
-				arr = list(json.loads(json_string))
+				arr = ast.literal_eval(string)
 			except:
-				print ('Bad json: ', json_string )
+				print ('Bad array: ', json_string)
 				self.unformatted_indices.append(i)
 				arr = []
 
@@ -108,9 +112,8 @@ class QASections:
 				formed_string = LLAMA_PROMPT_FORMAT.format(question, answer)
 				formatted_outputs.append({'text': formed_string})
 
-		with open(self.output_file, 'w') as f:
-			json.dump(formatted_outputs, f)
-		print (f'json dumped: bad sections, {self.unformatted_indices}')
+		pickle.dump(formatted_outputs, open(self.output_file), 'wb')
+		print (f'Array dumped: bad sections, {self.unformatted_indices}')
 		return
 
 
