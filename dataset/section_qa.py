@@ -151,7 +151,7 @@ if __name__ == '__main__':
 		formatted_outputs = generator.format_qas()
 		all_outputs += formatted_outputs
 
-	output_path = f'/home/bbadger/experiments/github_pages_{char_lim}'
+	output_path = f'/home/bbadger/experiments/github_pages_qas'
 	with open(output_path, 'wb') as f:
 		pickle.dump(formatted_outputs, f)
 		print ('Outputs saved')
