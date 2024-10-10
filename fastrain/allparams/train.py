@@ -110,7 +110,7 @@ def tokenize_input(text, tokenizer, tile_size=1024, overlap_size=20):
 	# assumes dataset is not large (< 1b samples) and can be loaded in memory
 	all_data = []
 	for i, text_file in enumerate(text):
-		if isinstance(text_file), dict:
+		if isinstance(text_file, dict):
 			text_file = text_file['text']
 		input_ids = tokenizer.encode(
 			text_file,
