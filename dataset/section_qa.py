@@ -6,6 +6,7 @@ import torch
 import argparse
 import ast
 import pickle
+import re
 
 # Instantiate the parser
 parser = argparse.ArgumentParser(description='Optional app description')
