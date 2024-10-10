@@ -93,16 +93,16 @@ class QASections:
 			if string[-1] == '"':
 				string += '}'
 			if string[0] == '"':
-				string = '{' + json_string
+				string = '{' + string
 			if string[-1] != "]":
-				string = json_string + "]"
+				string = string + "]"
 			if string[0] != "[":
-				string = "[" + json_string
+				string = "[" + string
 
 			try:
 				arr = ast.literal_eval(string)
 			except:
-				print ('Bad array: ', json_string)
+				print ('Bad array: ', string)
 				self.unformatted_indices.append(i)
 				arr = []
 
