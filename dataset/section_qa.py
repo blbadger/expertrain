@@ -73,7 +73,7 @@ class QASections:
 								...
 							]		
 
-							Answer in valid JSON with no other text.
+							Answer in valid JSON with no other text. Do not begin your answer with a phrase like 'Here are five insightful questions...'.
 
 							Context:
 							{chunk}
@@ -89,26 +89,21 @@ class QASections:
 	def format_qas(self):
 		formatted_outputs = []
 		for i, string in enumerate(self.qa_outputs):
-			# add first and final braces/brackets if necessary
-			if string[-1] == '"':
-				string += '}'
-			if string[0] == '"':
-				string = '{' + string
-			if string[-1] != "]":
-				string = string + "]"
-			if string[0] != "[":
-				string = "[" + string
+			question_chars = len('"Question": ')
+			answer_chars = len('"Answer": ')
+			all_questions = [k.start() for k in re.finditer('"Question": ', string)]
+			all_answers = [k.start() for k in re.finditer('"Answer": ', string)]
 
-			try:
-				arr = ast.literal_eval(string)
-			except:
-				print ('Bad array: ', string)
-				self.unformatted_indices.append(i)
-				arr = []
-
-			for qa_pair in arr:
-				question = qa_pair["Question"]
-				answer = qa_pair["Answer"]
+			for i, pair in enumerate(zip(all_questions, all_answers)):
+				# if on the last qa pair
+				if i == len(all_questions) - 1:
+					answer_stop = len(string)
+				else:
+					answer_stop = all_questions[i+1]
+				question = string[pair[0]+question_chars:pair[1]]
+				answer = string[pair[1]+answer_chars:answer_stop]
+				question = question.strip(',"}\n{" ][')
+				answer = answer.strip('",}\n{" ][')
 				formed_string = LLAMA_PROMPT_FORMAT.format(question, answer)
 				formatted_outputs.append({"text": formed_string})
 
