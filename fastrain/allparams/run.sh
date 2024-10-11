@@ -1,11 +1,11 @@
 accelerate launch --config_file "configs/fsdp_config_allparams.yaml" train.py \
 --seed 100 \
 --model_name_or_path "/home/bbadger/Desktop/llama-3.1-8b-instruct" \
---dataset_path "open-phi/textbooks" \
+--dataset_path "/home/bbadger/experiments/github_pages_source" \
 --add_special_tokens False \
 --append_concat_token False \
---max_seq_len 256 \
---num_train_epochs 8 \
+--max_seq_len 1024 \
+--num_train_epochs 11 \
 --logging_steps 50 \
 --log_level "info" \
 --logging_strategy "steps" \
@@ -18,9 +18,9 @@ accelerate launch --config_file "configs/fsdp_config_allparams.yaml" train.py \
 --weight_decay 0.0 \
 --warmup_ratio 0.0 \
 --max_grad_norm 1.0 \
---output_dir "/home/bbadger/experiments/full_llama3.1_8b" \
---per_device_train_batch_size 1 \
---per_device_eval_batch_size 1 \
+--output_dir "/home/bbadger/experiments/github_full_llama3.1_8b" \
+--per_device_train_batch_size 2 \
+--per_device_eval_batch_size 2 \
 --gradient_checkpointing True \
 --dataset_text_field "content" \
 --use_flash_attn False \
