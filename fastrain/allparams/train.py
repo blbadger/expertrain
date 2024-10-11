@@ -144,7 +144,8 @@ def main(model_args, data_args, training_args):
 		training_args.gradient_checkpointing_kwargs = {"use_reentrant": model_args.use_reentrant}
 
 	data_path = data_args.dataset_path
-	dataset = load_dataset(data_path)
+	# dataset = load_dataset(data_path)
+	dataset = load_from_disk(data_path)
 
 	train_data = tokenize_input(dataset, tokenizer, tile_size=data_args.max_seq_length)
 	test_data = tokenize_input(dataset, tokenizer, tile_size=data_args.max_seq_length)
