@@ -5,7 +5,7 @@ OMP_NUM_THREADS=10 accelerate launch --config_file "configs/fsdp_config_qlora.ya
 --add_special_tokens False \
 --append_concat_token False \
 --max_seq_len 1024 \
---num_train_epochs 8 \
+--num_train_epochs 13 \
 --logging_steps 50 \
 --log_level "info" \
 --logging_strategy "steps" \
