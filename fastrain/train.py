@@ -110,6 +110,8 @@ def tokenize_input(text, tokenizer, tile_size=1024, overlap_size=20):
 	# assumes dataset is not large (< 1b samples) and can be loaded in memory
 	all_data = []
 	for i, text_file in enumerate(text):
+		if isinstance(text_file, dict):
+			text_file = text_file['text']
 		input_ids = tokenizer.encode(
 			text_file,
 			add_special_tokens=False,
@@ -142,11 +144,11 @@ def main(model_args, data_args, training_args):
 		training_args.gradient_checkpointing_kwargs = {"use_reentrant": model_args.use_reentrant}
 
 	data_path = data_args.dataset_path
-	dataset = load_dataset(data_path, split="train")[:10]['markdown']
-	# if os.path.exists(data_path):
-	# 	dataset = load_from_disk(data_path)
-	# else:
-	# 	dataset = load_dataset(data_path)
+	#dataset = load_dataset(data_path, split="train")[:10]['markdown']
+	if os.path.exists(data_path):
+		dataset = load_from_disk(data_path)
+	else:
+		dataset = load_dataset(data_path)
 
 	train_data = tokenize_input(dataset, tokenizer, tile_size=data_args.max_seq_length)
 	test_data = tokenize_input(dataset, tokenizer, tile_size=data_args.max_seq_length)

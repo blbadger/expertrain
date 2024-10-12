@@ -112,6 +112,7 @@ def tokenize_input(text, tokenizer, tile_size=1024, overlap_size=20):
 	for i, text_file in enumerate(text):
 		if isinstance(text_file, dict):
 			text_file = text_file['text']
+		
 		input_ids = tokenizer.encode(
 			text_file,
 			add_special_tokens=False,
@@ -147,6 +148,7 @@ def main(model_args, data_args, training_args):
 	# dataset = load_dataset(data_path)
 	dataset = load_from_disk(data_path)
 	print ('dataset loaded')
+	print (len(dataset))
 
 	train_data = tokenize_input(dataset, tokenizer, tile_size=data_args.max_seq_length)
 	test_data = tokenize_input(dataset, tokenizer, tile_size=data_args.max_seq_length)
