@@ -19,7 +19,7 @@ if __name__ == "__main__":
 	bash_string = ""
 	for gpu_index in range(n_gpus):
 		bash_string += template.format(gpu_index, n_gpus, gpu_index, model_path, output_path)
-	bash_string = bash_string[:-3] # strip _&/n from last templated entry
+	bash_string = bash_string[:-2] # strip '&/n' from last templated entry
 	print (f'Running string: {bash_string}')
 	subprocess.run(bash_string, shell=True)
 

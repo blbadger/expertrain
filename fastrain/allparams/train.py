@@ -13,6 +13,8 @@ import json
 import mlflow
 from transformers import DataCollatorForLanguageModeling
 from datasets import Dataset, load_dataset, load_from_disk
+import warnings
+wargning.filterwarnings("ignore")
 
 # parse args
 @dataclass
