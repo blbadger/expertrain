@@ -13,6 +13,8 @@ import json
 import mlflow
 from transformers import DataCollatorForLanguageModeling
 from datasets import Dataset, load_dataset, load_from_disk
+import warnings
+wargning.filterwarnings("ignore")
 
 # parse args
 @dataclass
@@ -187,8 +189,9 @@ def main(model_args, data_args, training_args):
 		checkpoint = training_args.resume_from_checkpoint
 	trainer.train(resume_from_checkpoint=checkpoint)
 
+	# saving final model
 	if trainer.is_fsdp_enabled:
-		trainer.accelerator.state.fsdp.pluging.set_state.dict_type("FULL_STATE_DICT")
+	    trainer.accelerator.state.fsdp_plugin.set_state_dict_type("FULL_STATE_DICT")
 	trainer.save_model()
 
 
