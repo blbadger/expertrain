@@ -1,6 +1,6 @@
 OMP_NUM_THREADS=10 accelerate launch --config_file "configs/fsdp_config_qlora.yaml" train.py \
 --seed 100 \
---model_name_or_path "/home/bbadger/Desktop/llama-3.1-8b-instruct" \
+--model_name_or_path "/home/bbadger/Desktop/llama-3-8b-instruct" \
 --dataset_path "/home/bbadger/experiments/github_pages_source" \
 --add_special_tokens False \
 --append_concat_token False \

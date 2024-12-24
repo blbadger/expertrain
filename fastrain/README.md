@@ -3,23 +3,23 @@
 ### Requirements
 
 ```bash
-trl==0.9.4
-bitsandbytes==0.43.1
-accelerate==0.30.1
-transformers==4.41.2
-peft==0.11.1
-````
-
-```bash
-torch (latest)
-flash_attn (latest)
+accelerate==1.2.1
+bitsandbytes==0.45.0
+datasets==3.2.0
 deepspeed==0.14.4
-trl==0.9.4
-bitsandbytes==0.43.1
-accelerate=0.30.1
-transformers==0.41.2
+huggingface-hub==0.27.0
+matplotlib==3.10.0
+mlflow==2.19.0
+numpy==2.2.1
+pandas==2.2.3
 peft==0.11.1
-numpy==2.0.1
-tensorflow==2.17.0
-
+pillow==11.0.0
+pyarrow==18.1.0
+safetensors==0.4.5
+scipy==1.14.1
+torch==2.5.1
+tqdm==4.67.1
+transformers==4.47.1
+triton==3.1.0
+trl==0.9.4
 ```
