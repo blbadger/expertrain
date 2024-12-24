@@ -14,7 +14,7 @@ import mlflow
 from transformers import DataCollatorForLanguageModeling
 from datasets import Dataset, load_dataset, load_from_disk
 import warnings
-wargning.filterwarnings("ignore")
+warnings.filterwarnings("ignore")
 
 # parse args
 @dataclass
@@ -165,8 +165,8 @@ def main(model_args, data_args, training_args):
 
 	test_text = {'text': list(test_text)}
 	test_text_dataset = Dataset.from_dict(test_text)
-	for name, param in model.named_parameters():
-		print ('Before trainer: ', name, param.device, param.dtype)
+	#for name, param in model.named_parameters():
+	#	print ('Before trainer: ', name, param.device, param.dtype)
 
 	trainer = SFTTrainer(
 		model=model,
@@ -186,8 +186,8 @@ def main(model_args, data_args, training_args):
 	trainer.accelerator.print(f"{trainer.model}")
 	trainer.model.print_trainable_parameters()
 	trainer.model = trainer.model.to(torch.half)
-	for name, param in trainer.model.named_parameters():
-		trainer.accelerator.print('After trainer: ', name, param.dtype, param.device)
+	#for name, param in trainer.model.named_parameters():
+	#	trainer.accelerator.print('After trainer: ', name, param.dtype, param.device)
 
 	checkpoint=None
 	if training_args.resume_from_checkpoint:
