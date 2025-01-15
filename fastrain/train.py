@@ -175,13 +175,12 @@ def main(model_args, data_args, training_args):
 		train_dataset=train_text_dataset,
 		eval_dataset=test_text_dataset,
 		peft_config=peft_config,
-		packing=data_args.packing,
-		dataset_kwargs={
-			"append_concat_token": data_args.append_concat_token,
-			"add_special_tokens": data_args.add_special_tokens
-		},
-		dataset_text_field='text',
-		max_seq_length=data_args.max_seq_length
+		#dataset_kwargs={
+	#		"append_concat_token": data_args.append_concat_token,
+	#		"add_special_tokens": data_args.add_special_tokens
+	#	},
+	#	dataset_text_field='text',
+	#	max_seq_length=data_args.max_seq_length
 	)
 	trainer.accelerator.print(f"{trainer.model}")
 	trainer.model.print_trainable_parameters()
