@@ -105,7 +105,6 @@ def tile_inputs(input_ids, tokenizer, tile_overlap=20, tile_size=1024):
 				)
 			tiled_arr.append(tokens)
 		i += tile_size - tile_overlap
-
 	return tiled_arr
 
 def tokenize_input(text, tokenizer, tile_size=1024, overlap_size=20):
@@ -149,6 +148,8 @@ def main(model_args, data_args, training_args):
 	if os.path.exists(data_path):
 		dataset = load_from_disk(data_path)
 	else:
+		if 'huggingface' in data_path.lower():
+			dataset = load_dataset(data_path, split="train", name="sample-10BT", streaming=False)
 		dataset = load_dataset(data_path)
 
 	train_data = tokenize_input(dataset, tokenizer, tile_size=data_args.max_seq_length)
@@ -156,7 +157,7 @@ def main(model_args, data_args, training_args):
 	train_text, test_text = detokenize_input(train_data, tokenizer), detokenize_input(test_data, tokenizer)
 	print ("Training samples: ", len(train_text))
 	print ("Test samples: ", len(test_text))
-
+	print ("Train sample 0 tokens: ", len(train_data[0]))
 	collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
 	# for sft trainer
