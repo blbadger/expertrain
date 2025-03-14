@@ -4,7 +4,7 @@ OMP_NUM_THREADS=4 accelerate launch --config_file "configs/fsdp_config_qlora.yam
 --dataset_path "/home/bbadger/experiments/github_pages_source" \
 --add_special_tokens False \
 --append_concat_token False \
---max_seq_len 16384 \
+--max_seq_len 8192 \
 --num_train_epochs 100 \
 --logging_steps 50 \
 --log_level "info" \
@@ -28,7 +28,7 @@ OMP_NUM_THREADS=4 accelerate launch --config_file "configs/fsdp_config_qlora.yam
 --use_reentrant True \
 --dataset_text_field "content" \
 --use_flash_attn False \
---use_peft_lora True \
+--use_peft_lora False \
 --lora_r 32 \
 --lora_alpha 64 \
 --lora_dropout 0. \
