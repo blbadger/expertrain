@@ -147,25 +147,35 @@ def main(model_args, data_args, training_args):
 		training_args.gradient_checkpointing_kwargs = {"use_reentrant": model_args.use_reentrant}
 
 	data_path = data_args.dataset_path
-	# dataset = load_dataset(data_path)
-	dataset = load_from_disk(data_path)
+
+	if 'cots' in data_path:
+		dataset = load_dataset("open-r1/codeforces-cots", "solutions_decontaminated")
+	else:
+		dataset = load_from_disk(data_path)
 	print ('dataset loaded')
 	print (len(dataset))
+	block_text = False
+	if block_text:
+		train_data = tokenize_input(dataset, tokenizer, tile_size=data_args.max_seq_length)
+		test_data = tokenize_input(dataset, tokenizer, tile_size=data_args.max_seq_length)
+		train_text, test_text = detokenize_input(train_data, tokenizer), detokenize_input(test_data, tokenizer)
+		# for sft trainer
+		train_text = {'text': list(train_text)}
+		train_text_dataset = Dataset.from_dict(train_text)
 
-	train_data = tokenize_input(dataset, tokenizer, tile_size=data_args.max_seq_length)
-	test_data = tokenize_input(dataset, tokenizer, tile_size=data_args.max_seq_length)
-	train_text, test_text = detokenize_input(train_data, tokenizer), detokenize_input(test_data, tokenizer)
-	print ("Training samples: ", len(train_text))
-	print ("Test samples: ", len(test_text))
+		test_text = {'text': list(test_text)}
+		test_text_dataset = Dataset.from_dict(test_text)
+
+	else:
+		split_index = 200
+		train_text, test_text = dataset.take(split_index), dataset.take(split_index)
+
+	# print ("Training samples: ", len(train_text))
+	# print ("Test samples: ", len(test_text))
 
 	collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
-	# for sft trainer
-	train_text = {'text': list(train_text)}
-	train_text_dataset = Dataset.from_dict(train_text)
-
-	test_text = {'text': list(test_text)}
-	test_text_dataset = Dataset.from_dict(test_text)
+	training_args = SFTConfig(packing=False, dataset_text_field='messages')
 
 	trainer = SFTTrainer(
 		model=model,
@@ -174,6 +184,7 @@ def main(model_args, data_args, training_args):
 		train_dataset=train_text_dataset,
 		eval_dataset=test_text_dataset,
 		peft_config=peft_config,
+		args=training_args
 		#packing=data_args.packing,
 		#dataset_kwargs={
 		#	"append_concat_token": data_args.append_concat_token,
