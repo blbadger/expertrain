@@ -154,7 +154,7 @@ def main(model_args, data_args, training_args):
 		dataset = load_from_disk(data_path)
 	print ('dataset loaded')
 	print (len(dataset))
-	block_text = False
+	block_text = len(dataset) == 1
 	if block_text:
 		train_data = tokenize_input(dataset, tokenizer, tile_size=data_args.max_seq_length)
 		test_data = tokenize_input(dataset, tokenizer, tile_size=data_args.max_seq_length)
@@ -169,9 +169,6 @@ def main(model_args, data_args, training_args):
 	else:
 		split_index=200
 		train_text, test_text = dataset.skip(split_index), dataset.take(split_index)
-
-	# print ("Training samples: ", len(train_text))
-	# print ("Test samples: ", len(test_text))
 
 	collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 

@@ -145,29 +145,35 @@ def main(model_args, data_args, training_args):
 		training_args.gradient_checkpointing_kwargs = {"use_reentrant": model_args.use_reentrant}
 
 	data_path = data_args.dataset_path
-	if os.path.exists(data_path):
-		dataset = load_from_disk(data_path)
+	if 'cots' in data_path:
+		dataset = load_dataset("open-r1/codeforces-cots", "solutions_decontaminated", split="train")
 	else:
 		if 'huggingface' in data_path.lower():
 			dataset = load_dataset(data_path, split="train", name="sample-10BT", streaming=False)
-		dataset = load_dataset(data_path)
+		elif os.path.exists(data_path):
+			dataset = load_from_disk(data_path)
 
-	train_data = tokenize_input(dataset, tokenizer, tile_size=data_args.max_seq_length)
-	test_data = tokenize_input(dataset, tokenizer, tile_size=data_args.max_seq_length)
-	train_text, test_text = detokenize_input(train_data, tokenizer), detokenize_input(test_data, tokenizer)
+	print ('dataset loaded')
 	print ("Training samples: ", len(train_text))
 	print ("Test samples: ", len(test_text))
 	print ("Train sample 0 tokens: ", len(train_data[0]))
 	collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
-	# for sft trainer
-	train_text = {'text': list(train_text)}
-	train_text_dataset = Dataset.from_dict(train_text)
+	block_text = len(dataset) == 1
+	if block_text:
+		train_data = tokenize_input(dataset, tokenizer, tile_size=data_args.max_seq_length)
+		test_data = tokenize_input(dataset, tokenizer, tile_size=data_args.max_seq_length)
+		train_text, test_text = detokenize_input(train_data, tokenizer), detokenize_input(test_data, tokenizer)
+		# for sft trainer
+		train_text = {'text': list(train_text)}
+		train_text_dataset = Dataset.from_dict(train_text)
 
-	test_text = {'text': list(test_text)}
-	test_text_dataset = Dataset.from_dict(test_text)
-	#for name, param in model.named_parameters():
-	#	print ('Before trainer: ', name, param.device, param.dtype)
+		test_text = {'text': list(test_text)}
+		test_text_dataset = Dataset.from_dict(test_text)
+
+	else:
+		split_index=200
+		train_text, test_text = dataset.skip(split_index), dataset.take(split_index)
 
 	trainer = SFTTrainer(
 		model=model,
