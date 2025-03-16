@@ -5,14 +5,14 @@ OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_allparams
 --add_special_tokens False \
 --append_concat_token False \
 --max_seq_len 16384 \
---num_train_epochs 11 \
+--num_train_epochs 2 \
 --logging_steps 50 \
 --log_level "info" \
 --logging_strategy "steps" \
 --evaluation_strategy "steps" \
---eval_steps 10 \
+--eval_steps 100 \
 --save_strategy "steps" \
---save_steps 100 \
+--save_steps 500 \
 --bf16 False \
 --fp16 True \
 --learning_rate 4e-5 \
@@ -24,7 +24,8 @@ OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_allparams
 --per_device_train_batch_size 4 \
 --per_device_eval_batch_size 2 \
 --gradient_checkpointing True \
---dataset_text_field "content" \
+--gradient_accumulation_steps 1 \
+--dataset_text_field "messages" \
 --use_flash_attn False \
 --use_peft_lora False \
 --report_to "none"

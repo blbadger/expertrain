@@ -149,7 +149,7 @@ def main(model_args, data_args, training_args):
 	data_path = data_args.dataset_path
 
 	if 'cots' in data_path:
-		dataset = load_dataset("open-r1/codeforces-cots", "solutions_decontaminated")
+		dataset = load_dataset("open-r1/codeforces-cots", "solutions_decontaminated", split="train")
 	else:
 		dataset = load_from_disk(data_path)
 	print ('dataset loaded')
@@ -167,24 +167,25 @@ def main(model_args, data_args, training_args):
 		test_text_dataset = Dataset.from_dict(test_text)
 
 	else:
-		split_index = 200
-		train_text, test_text = dataset.take(split_index), dataset.take(split_index)
+		split_index=200
+		train_text, test_text = dataset.skip(split_index), dataset.take(split_index)
 
 	# print ("Training samples: ", len(train_text))
 	# print ("Test samples: ", len(test_text))
 
 	collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
-	training_args = SFTConfig(packing=False, dataset_text_field='messages')
+	training_args.packing=False
+	training_args.dataset_text_field=data_args.dataset_text_field
+	#training_args.gradient_accumulation_steps = 8 # TODO: swap
 
 	trainer = SFTTrainer(
 		model=model,
 		tokenizer=tokenizer,
 		args=training_args,
-		train_dataset=train_text_dataset,
-		eval_dataset=test_text_dataset,
+		train_dataset=train_text,
+		eval_dataset=test_text,
 		peft_config=peft_config,
-		args=training_args
 		#packing=data_args.packing,
 		#dataset_kwargs={
 		#	"append_concat_token": data_args.append_concat_token,
