@@ -29,4 +29,5 @@ OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_allparams
 --dataset_text_field "messages" \
 --use_flash_attn False \
 --use_peft_lora False \
---report_to "none"
+--report_to "none" \
+--resume_from_checkpoint "/home/bbadger/experiments/llama-3.1-8b-codeforcescots/checkpoint-2000"

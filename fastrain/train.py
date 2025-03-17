@@ -146,7 +146,7 @@ def main(model_args, data_args, training_args):
 
 	data_path = data_args.dataset_path
 	if 'cots' in data_path:
-		dataset = load_dataset("open-r1/codeforces-cots", "solutions_decontaminated", split="train")
+		dataset = load_dataset(data_path, "solutions_decontaminated", split="train")
 	else:
 		if 'huggingface' in data_path.lower():
 			dataset = load_dataset(data_path, split="train", name="sample-10BT", streaming=False)
@@ -154,12 +154,13 @@ def main(model_args, data_args, training_args):
 			dataset = load_from_disk(data_path)
 
 	print ('dataset loaded')
-	print ("Training samples: ", len(train_text))
-	print ("Test samples: ", len(test_text))
-	print ("Train sample 0 tokens: ", len(train_data[0]))
+	#print ("Training samples: ", len(train_text))
+	#print ("Test samples: ", len(test_text))
+	#print ("Train sample 0 tokens: ", len(train_data[0]))
 	collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
 	block_text = len(dataset) == 1
+	print (f"Block text: {block_text}")
 	if block_text:
 		train_data = tokenize_input(dataset, tokenizer, tile_size=data_args.max_seq_length)
 		test_data = tokenize_input(dataset, tokenizer, tile_size=data_args.max_seq_length)
@@ -179,8 +180,8 @@ def main(model_args, data_args, training_args):
 		model=model,
 		tokenizer=tokenizer,
 		args=training_args,
-		train_dataset=train_text_dataset,
-		eval_dataset=test_text_dataset,
+		train_dataset=train_text,
+		eval_dataset=test_text,
 		peft_config=peft_config,
 		#dataset_kwargs={
 	#		"append_concat_token": data_args.append_concat_token,
