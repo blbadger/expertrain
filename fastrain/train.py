@@ -183,28 +183,23 @@ def main(model_args, data_args, training_args):
 		train_dataset=train_text,
 		eval_dataset=test_text,
 		peft_config=peft_config,
-		#dataset_kwargs={
-	#		"append_concat_token": data_args.append_concat_token,
-	#		"add_special_tokens": data_args.add_special_tokens
-	#	},
-	#	dataset_text_field='text',
-	#	max_seq_length=data_args.max_seq_length
 	)
+
 	trainer.accelerator.print(f"{trainer.model}")
 	trainer.model.print_trainable_parameters()
 	trainer.model = trainer.model.to(torch.half)
 	#for name, param in trainer.model.named_parameters():
 	#	trainer.accelerator.print('After trainer: ', name, param.dtype, param.device)
 
-	checkpoint=None
-	if training_args.resume_from_checkpoint:
-		checkpoint = training_args.resume_from_checkpoint
-	print (f'Training initialized from checkpoint {checkpoint}')
-	trainer.train(resume_from_checkpoint=checkpoint)
-
 	# saving final model
 	if trainer.is_fsdp_enabled:
 	    trainer.accelerator.state.fsdp_plugin.set_state_dict_type("FULL_STATE_DICT")
+
+	checkpoint=None
+	if training_args.resume_from_checkpoint:
+		checkpoint = training_args.resume_from_checkpoint
+		print (f'Training initialized from checkpoint {checkpoint}')
+	trainer.train(resume_from_checkpoint=checkpoint)
 	trainer.save_model()
 
 
