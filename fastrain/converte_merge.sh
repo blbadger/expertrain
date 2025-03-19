@@ -1,0 +1,11 @@
+python convert_state_merge.py \
+--model_name_or_path "/home/bbadger/Desktop/llama-3.1-8b-instruct" \
+--use_peft_lora True \
+--lora_r 64 \
+--lora_alpha 64 \
+--lora_dropout 0. \
+--lora_target_modules "all-linear" \
+--use_4bit_quantization True \
+--use_nested_quant True \
+--bnb_4bit_compute_dtype "float16" \
+--bnb_4bit_quant_storage_dtype "float16" \

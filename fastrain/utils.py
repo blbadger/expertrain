@@ -6,7 +6,7 @@ from datasets.builder import DatasetGenerationError
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from peft import LoraConfig
 
-def create_and_prepare_model(args, data_args, training_args):
+def create_and_prepare_model(args, data_args, training_args, device=None):
 	bnb_config = None
 	quant_storage_dtype = None
 
@@ -26,13 +26,23 @@ def create_and_prepare_model(args, data_args, training_args):
 			bnb_config = BitsAndBytesConfig(load_in_8bit=True)
 
 	torch_dtype = quant_storage_dtype if quant_storage_dtype and quant_storage_dtype.is_floating_point else torch.float32
-	model = AutoModelForCausalLM.from_pretrained(
-			args.model_name_or_path,
-			quantization_config = bnb_config,
-			trust_remote_code=True,
-			attn_implementation="flash_attention_2" if args.use_flash_attn else "eager",
-			torch_dtype=torch_dtype
-		)
+	if not device:
+		model = AutoModelForCausalLM.from_pretrained(
+				args.model_name_or_path,
+				quantization_config = bnb_config,
+				trust_remote_code=True,
+				attn_implementation="flash_attention_2" if args.use_flash_attn else "eager",
+				torch_dtype=torch_dtype
+			)
+	else:
+		model = AutoModelForCausalLM.from_pretrained(
+				args.model_name_or_path,
+				quantization_config = bnb_config,
+				trust_remote_code=True,
+				attn_implementation="flash_attention_2" if args.use_flash_attn else "eager",
+				torch_dtype=torch_dtype,
+				device=device
+			)
 
 
 	peft_config=None
