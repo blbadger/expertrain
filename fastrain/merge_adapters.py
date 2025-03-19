@@ -1,9 +1,12 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 import torch.distributed._shard.checkpoint as dist_cp
-from utils import create_and_prepare_mdoel
+from utils import create_and_prepare_model
 from transformers import HfArgumentParser, TrainingArguments, set_seed
-from peft import get_peft_model
+from peft import get_peft_model, PeftModel
+from dataclasses import dataclass, field
+from typing import Optional
+
 
 # parse args
 @dataclass
@@ -39,23 +42,41 @@ class ModelArguments:
     use_4bit_quantization: Optional[bool] = field(
         default=False
         )
+    use_flash_attn: Optional[bool] = field(
+		default=False
+		)
+
+@dataclass
+class DataTrainingArguments:
+	dataset_path: Optional[str] = field(
+		default=None
+		)
+	packing: Optional[bool] = field(
+		default=False
+		)
+	dataset_text_field: str = field(
+		default="text",
+		metadata={"help": "Dataset field to use as input text"}
+		)
+	max_seq_length: Optional[int] = field(default=512)
+	append_concat_token: Optional[bool] = field(
+		default=False,
+		metadata={"help": "If True, appends `eos_token_id` at the end of each sample being packed."}
+		)
+	add_special_tokens: Optional[bool] = field(
+		default=False,
+		metadata={"help": "If True, tokenizer adds special tokens to each sample being packed"}
+		)
+	splits: Optional[str] = field(
+		default="train,test"
+		)
 
 parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
 model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
 model, peft_config, tokenizer = create_and_prepare_model(model_args, data_args, training_args, device='cpu')
-peft_model = get_peft_model(model, peft_config)
-
-state_dict = {
-        "model": model.state_dict()
-    }
-
-distcp_checkpoint_path = "/home/bbadger/experiments/llama-3.1-8b-codeforcescots-qlora/checkpoint-5060/pytorch_model_fsdp_0"
-dist_cp.load_state_dict(
-                state_dict=state_dict,
-                storage_reader = dist_cp.FileSystemReader(distcp_checkpoint_path),
-                no_dist=True,
-            )
-
-model.load_state_dict(state_dict["model"])
-model.save_pretrained("/home/bbadger/experiments/llama-3.1-8b-codeforcescots-qlora/model")
+model = PeftModel.from_pretrained(model, "/home/bbadger/experiments/llama-3.1-8b-codeforcescots-qlora").to('cpu')
+print (f"Model pre-merge: {model}")
+model = model.merge_and_unload()
+print (f"Model post-merge: {model}")
+model.save_pretrained("/home/bbadger/experiments/llama-3.1-8b-codeforcescots-qlora/merged_model")

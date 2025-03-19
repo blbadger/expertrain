@@ -5,7 +5,7 @@ OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_qlora.yam
 --add_special_tokens False \
 --append_concat_token False \
 --max_seq_len 16384 \
---num_train_epochs 3 \
+--num_train_epochs 0 \
 --logging_steps 50 \
 --log_level "info" \
 --logging_strategy "steps" \
@@ -39,3 +39,4 @@ OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_qlora.yam
 --bnb_4bit_compute_dtype "float16" \
 --bnb_4bit_quant_storage_dtype "float16" \
 --report_to "none"
+#--resume_from_checkpoint "/home/bbadger/experiments/llama-3.1-8b-codeforcescots-qlora/checkpoint-5060"

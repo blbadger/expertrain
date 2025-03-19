@@ -41,7 +41,7 @@ def create_and_prepare_model(args, data_args, training_args, device=None):
 				trust_remote_code=True,
 				attn_implementation="flash_attention_2" if args.use_flash_attn else "eager",
 				torch_dtype=torch_dtype,
-				device=device
+				device_map=device
 			)
 
 
