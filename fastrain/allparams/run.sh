@@ -1,12 +1,13 @@
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
 OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_allparams.yaml" train.py \
 --seed 100 \
---model_name_or_path "/home/bbadger/Desktop/llama-3.1-8b-instruct" \
+--model_name_or_path "/home/bbadger/experiments/llama-3.1-8b-codeforcescots/model" \ # replace with checkpoint model if necessary
 --dataset_path "open-r1/codeforces-cots" \
 --add_special_tokens False \
 --append_concat_token False \
 --max_seq_len 16384 \
---num_train_epochs 0 \
---logging_steps 50 \
+--num_train_epochs 2 \
+--logging_steps 10 \
 --log_level "info" \
 --logging_strategy "steps" \
 --evaluation_strategy "steps" \
@@ -22,11 +23,11 @@ OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_allparams
 --max_grad_norm 1.0 \
 --output_dir "/home/bbadger/experiments/llama-3.1-8b-codeforcescots" \
 --per_device_train_batch_size 4 \
---per_device_eval_batch_size 2 \
+--per_device_eval_batch_size 4 \
 --gradient_checkpointing True \
 --gradient_accumulation_steps 1 \
 --dataset_text_field "messages" \
 --use_flash_attn False \
 --use_peft_lora False \
 --report_to "none" \
---resume_from_checkpoint "/home/bbadger/experiments/llama-3.1-8b-codeforcescots/checkpoint-2000"
+#--resume_from_checkpoint "/home/bbadger/experiments/llama-3.1-8b-codeforcescots/checkpoint-2000"

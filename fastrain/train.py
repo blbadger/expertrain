@@ -192,14 +192,17 @@ def main(model_args, data_args, training_args):
 	#	trainer.accelerator.print('After trainer: ', name, param.dtype, param.device)
 
 	# saving final model
-	if trainer.is_fsdp_enabled:
-	    trainer.accelerator.state.fsdp_plugin.set_state_dict_type("FULL_STATE_DICT")
+#	if trainer.is_fsdp_enabled:
+#	    trainer.accelerator.state.fsdp_plugin.set_state_dict_type("FULL_STATE_DICT")
 
 	checkpoint=None
 	if training_args.resume_from_checkpoint:
 		checkpoint = training_args.resume_from_checkpoint
 		print (f'Training initialized from checkpoint {checkpoint}')
 	trainer.train(resume_from_checkpoint=checkpoint)
+	if trainer.is_fsdp_enabled:
+		trainer.accelerator.state.fsdp_plugin.set_state_dict_type("FULL_STATE_DICT")
+
 	trainer.save_model()
 
 

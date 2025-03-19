@@ -7,7 +7,7 @@ import transformers
 import trl
 import torch
 from transformers import HfArgumentParser, TrainingArguments, set_seed
-from trl import SFTTrainer
+from trl import SFTTrainer, SFTConfig
 from utils import create_and_prepare_model
 import json
 import mlflow
@@ -174,6 +174,8 @@ def main(model_args, data_args, training_args):
 
 	training_args.packing=False
 	training_args.dataset_text_field=data_args.dataset_text_field
+	training_args.optim="adamw_torch" # "paged_adamw_32bit"
+	#training_args.optim_target_modules=["q_proj", "k_proj", "v_proj", "up_proj", "down_proj", "o_proj", "gate_proj"]
 
 	trainer = SFTTrainer(
 		model=model,
@@ -181,18 +183,19 @@ def main(model_args, data_args, training_args):
 		args=training_args,
 		train_dataset=train_text,
 		eval_dataset=test_text,
-		peft_config=peft_config,
+		peft_config=peft_config,	
 	)
 
 	trainer.accelerator.print(f"{trainer.model}")
-
 	# saving final model
 
 	checkpoint=None
 	if training_args.resume_from_checkpoint:
 		checkpoint = training_args.resume_from_checkpoint
 		print (f'Training initialized from checkpoint {checkpoint}')
-	trainer.train(resume_from_checkpoint=checkpoint)
+
+	trainer.train()
+	#trainer.train(resume_from_checkpoint=checkpoint)
 	if trainer.is_fsdp_enabled:
 	    trainer.accelerator.state.fsdp_plugin.set_state_dict_type("FULL_STATE_DICT")
 	trainer.save_model()
