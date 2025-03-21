@@ -4,8 +4,8 @@ OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_qlora.yam
 --dataset_path "open-r1/codeforces-cots" \
 --add_special_tokens False \
 --append_concat_token False \
---max_seq_len 16384 \
---num_train_epochs 0 \
+--max_seq_len 32768 \
+--num_train_epochs 5 \
 --logging_steps 50 \
 --log_level "info" \
 --logging_strategy "steps" \
@@ -16,17 +16,17 @@ OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_qlora.yam
 --bf16 False \
 --fp16 True \
 --packing False \
---learning_rate 5e-5 \
---lr_scheduler_type "linear" \
+--learning_rate 4e-5 \
+--lr_scheduler_type "cosine" \
 --weight_decay 0.0 \
 --warmup_ratio 0.0 \
 --max_grad_norm 1.0 \
---output_dir "/home/bbadger/experiments/llama-3.1-8b-codeforcescots-qlora-b64" \
+--output_dir "/home/bbadger/experiments/llama-3.1-8b-codeforcescots-qlora-b128" \
 --per_device_train_batch_size 4 \
 --per_device_eval_batch_size 4 \
 --gradient_checkpointing True \
 --use_reentrant True \
---gradient_accumulation_steps 4 \
+--gradient_accumulation_steps 8 \
 --dataset_text_field "content" \
 --use_flash_attn False \
 --use_peft_lora True \
@@ -39,4 +39,4 @@ OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_qlora.yam
 --bnb_4bit_compute_dtype "float16" \
 --bnb_4bit_quant_storage_dtype "float16" \
 --report_to "none"
-#--resume_from_checkpoint "/home/bbadger/experiments/llama-3.1-8b-codeforcescots-qlora/checkpoint-5060"
+#--resume_from_checkpoint "/home/bbadger/experiments/llama-3.1-8b-codeforcescots-qlora/checkpoint-700"
