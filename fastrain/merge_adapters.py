@@ -70,14 +70,19 @@ class DataTrainingArguments:
 	splits: Optional[str] = field(
 		default="train,test"
 		)
+	lora_weights_path: Optional[str] = field(
+		default="/path/to/weights"
+	)
 
+	
 parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
 model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
 model, peft_config, tokenizer = create_and_prepare_model(model_args, data_args, training_args, device='cpu')
-model = PeftModel.from_pretrained(model, "/home/bbadger/experiments/llama-3.1-8b-codeforcescots-qlora-b128").to('cpu')
+model = PeftModel.from_pretrained(model, training_args.lora_weights_path).to('cpu')
 print (f"Model pre-merge: {model}")
 model = model.merge_and_unload()
 print (f"Model post-merge: {model}")
-tokenizer.save_pretrained("/home/bbadger/experiments/llama-3.1-8b-codeforcescots-qlora-b128/merged_model")
-model.save_pretrained("/home/bbadger/experiments/llama-3.1-8b-codeforcescots-qlora-b128/merged_model")
+output_path = training_args.lora_weights_path + '/merged_model'
+tokenizer.save_pretrained(output_path)
+model.save_pretrained(output_path)
