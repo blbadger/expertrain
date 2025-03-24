@@ -14,7 +14,7 @@ state_dict = {
         "model": model.state_dict()
     }
 
-distcp_checkpoint_path = "/home/bbadger/experiments/llama-3.1-8b-codeforcescots-qlora/checkpoint-2000/pytorch_model_fsdp_0"
+distcp_checkpoint_path = "/home/bbadger/experiments/llama-3.1-8b-codeforcescots/checkpoint-1000/pytorch_model_fsdp_0"
 dist_cp.load_state_dict(
                 state_dict=state_dict,
                 storage_reader = dist_cp.FileSystemReader(distcp_checkpoint_path),
@@ -22,4 +22,6 @@ dist_cp.load_state_dict(
             )
 
 model.load_state_dict(state_dict["model"])
-model.save_pretrained("/home/bbadger/experiments/llama-3.1-8b-codeforcescots-qlora/model")
+out_path = "/home/bbadger/experiments/llama-3.1-8b-codeforcescots/model-1000"
+model.save_pretrained(out_path)
+tokenizer.save_pretrained(out_path)

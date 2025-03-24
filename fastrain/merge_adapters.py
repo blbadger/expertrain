@@ -75,9 +75,9 @@ parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArgume
 model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
 model, peft_config, tokenizer = create_and_prepare_model(model_args, data_args, training_args, device='cpu')
-model = PeftModel.from_pretrained(model, "/home/bbadger/experiments/llama-3.1-8b-codeforcescots-qlora-b64").to('cpu')
+model = PeftModel.from_pretrained(model, "/home/bbadger/experiments/llama-3.1-8b-codeforcescots-qlora-b128").to('cpu')
 print (f"Model pre-merge: {model}")
 model = model.merge_and_unload()
 print (f"Model post-merge: {model}")
-tokenizer.save_pretrained("/home/bbadger/experiments/llama-3.1-8b-codeforcescots-qlora-b64/merged_model")
-model.save_pretrained("/home/bbadger/experiments/llama-3.1-8b-codeforcescots-qlora-b64/merged_model")
+tokenizer.save_pretrained("/home/bbadger/experiments/llama-3.1-8b-codeforcescots-qlora-b128/merged_model")
+model.save_pretrained("/home/bbadger/experiments/llama-3.1-8b-codeforcescots-qlora-b128/merged_model")
