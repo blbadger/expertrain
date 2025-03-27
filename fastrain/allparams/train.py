@@ -171,8 +171,12 @@ def main(model_args, data_args, training_args):
 		test_text_dataset = Dataset.from_dict(test_text)
 
 	else:
-		split_index=200
-		train_text, test_text = dataset.skip(split_index), dataset.take(split_index)
+		if 'bird' in str(data_path):
+			train_text = dataset
+			test_text = load_from_disk('/home/bbadger/experiments/bird_dev_dataset')
+		else:
+			split_index=200
+			train_text, test_text = dataset.skip(split_index), dataset.take(split_index)
 
 	collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
