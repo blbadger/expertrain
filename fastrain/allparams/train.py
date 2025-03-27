@@ -12,7 +12,7 @@ from utils import create_and_prepare_model
 import json
 import mlflow
 from transformers import DataCollatorForLanguageModeling
-from datasets import Dataset, load_dataset, load_from_disk
+from datasets import Dataset, load_dataset, load_from_disk, concatenate_datasets
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -150,6 +150,10 @@ def main(model_args, data_args, training_args):
 
 	if 'cots' in data_path:
 		dataset = load_dataset("open-r1/codeforces-cots", "solutions_decontaminated", split="train")
+		python_dataset = load_dataset(data_path, "solutions_py_decontaminated", split="train")
+		dataset = concatenate_datasets((dataset, python_dataset))
+
+
 	else:
 		dataset = load_from_disk(data_path)
 	print ('dataset loaded')

@@ -154,6 +154,9 @@ def main(model_args, data_args, training_args):
 			dataset = load_dataset(data_path, split="train", name="sample-10BT", streaming=False)
 		elif os.path.exists(data_path):
 			dataset = load_from_disk(data_path)
+			print (dataset[0])
+		else:
+			print ("no dataset found")
 
 	print ('dataset loaded')
 	#print ("Training samples: ", len(train_text))
@@ -175,8 +178,16 @@ def main(model_args, data_args, training_args):
 		test_text_dataset = Dataset.from_dict(test_text)
 
 	else:
-		split_index=200
-		train_text, test_text = dataset.skip(split_index), dataset.take(split_index)
+		if 'bird' in str(data_path):
+			train_text = dataset
+			test_text = load_from_disk('/home/bbadger/experiments/bird_dev_dataset')
+		else:
+			split_index=200
+			train_text, test_text = dataset.skip(split_index), dataset.take(split_index)
+	
+	#print (tokenizer.eos_token_id)
+	#tokenizer.eos_token_id = tokenizer.encode('<|endoftext|>')[0]
+	#print (tokenizer.eos_token_id)
 
 	trainer = SFTTrainer(
 		model=model,
@@ -186,7 +197,7 @@ def main(model_args, data_args, training_args):
 		eval_dataset=test_text,
 		peft_config=peft_config,
 	)
-
+	
 	trainer.accelerator.print(f"{trainer.model}")
 	trainer.model.print_trainable_parameters()
 	trainer.model = trainer.model.to(torch.half)
@@ -201,7 +212,9 @@ def main(model_args, data_args, training_args):
 	if training_args.resume_from_checkpoint:
 		checkpoint = training_args.resume_from_checkpoint
 		print (f'Training initialized from checkpoint {checkpoint}')
+
 	trainer.train(resume_from_checkpoint=checkpoint)
+	
 	if trainer.is_fsdp_enabled:
 		trainer.accelerator.state.fsdp_plugin.set_state_dict_type("FULL_STATE_DICT")
 
