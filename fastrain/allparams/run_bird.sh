@@ -11,12 +11,12 @@ OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_allparams
 --log_level "info" \
 --logging_strategy "steps" \
 --evaluation_strategy "steps" \
---eval_steps 100 \
+--eval_steps 20 \
 --save_strategy "steps" \
---save_steps 500 \
+--save_steps 100 \
 --bf16 False \
 --fp16 True \
---learning_rate 4e-6 \
+--learning_rate 1e-7 \
 --lr_scheduler_type "cosine" \
 --weight_decay 0.0 \
 --warmup_ratio 0.0 \
@@ -29,4 +29,4 @@ OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_allparams
 --dataset_text_field "messages" \
 --use_flash_attn False \
 --use_peft_lora False \
---report_to "none" \
+--report_to "none"
