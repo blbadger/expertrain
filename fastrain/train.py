@@ -191,17 +191,18 @@ def main(model_args, data_args, training_args):
 		else:
 			split_index=200
 			train_text, test_text = dataset.skip(split_index), dataset.take(split_index)
+
 	training_args.optim = "paged_adamw_8bit" # "paged_adamw_32bit"
 	training_args.max_length = data_args.max_seq_len
-	print (training_args)
+	print (training_args.max_length)
 		
-	config = SFTConfig(
-	optim = "paged_adamw_8bit",
-	max_length = data_args.max_seq_len
-	)
+	# config = SFTConfig(
+	# optim = "paged_adamw_8bit",
+	# max_length = data_args.max_seq_len
+	# )
 	trainer = SFTTrainer(
 		model=model,
-		args=config,
+		args=training_args,
 		train_dataset=train_text,
 		eval_dataset=test_text,
 		peft_config=peft_config,

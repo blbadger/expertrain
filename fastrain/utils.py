@@ -44,7 +44,6 @@ def create_and_prepare_model(args, data_args, training_args, device=None):
 				device_map=device
 			)
 
-
 	peft_config=None
 	if args.use_peft_lora:
 		peft_config = LoraConfig(
