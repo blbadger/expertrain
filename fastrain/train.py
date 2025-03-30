@@ -178,9 +178,11 @@ def main(model_args, data_args, training_args):
 			{"role": "user", "content":"@|@"},
 			{"role": "assistant", "content":"@|@"},
 		]
+		instruction_template = tokenizer.decode(tokenizer.apply_chat_template(mock)).split("@|@")[0]		
 		response_template = tokenizer.decode(tokenizer.apply_chat_template(mock)).split("@|@")[1]
-		print (f"Response template: {response_template}")
+		print (f"Input template: {instruction_template}Response template: {response_template}")
 		data_collator = DataCollatorForCompletionOnlyLM(
+			instruction_template=instruction_template,
 			response_template=response_template,
 			tokenizer=tokenizer, 
 			mlm=False
@@ -192,9 +194,10 @@ def main(model_args, data_args, training_args):
 			split_index=200
 			train_text, test_text = dataset.skip(split_index), dataset.take(split_index)
 
-	training_args.optim = "paged_adamw_8bit" # "paged_adamw_32bit"
+	#todo: 8-bit optims fail to send params from cpu during the backward, see if this can be debugged
+	training_args.optim = "adamw_torch" # "paged_adamw_32bit"
 	training_args.max_length = data_args.max_seq_len
-	print (training_args.max_length)
+	print (training_args.max_length, training_args.optim)
 		
 	# config = SFTConfig(
 	# optim = "paged_adamw_8bit",

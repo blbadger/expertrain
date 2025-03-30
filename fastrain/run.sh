@@ -4,9 +4,9 @@ OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_qlora.yam
 --dataset_path "open-r1/codeforces-cots" \
 --add_special_tokens False \
 --append_concat_token False \
---max_seq_len 1024 \
+--max_seq_len 8192 \
 --num_train_epochs 5 \
---logging_steps 1 \
+--logging_steps 10 \
 --log_level "info" \
 --logging_strategy "steps" \
 --evaluation_strategy "steps" \
@@ -16,7 +16,7 @@ OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_qlora.yam
 --bf16 False \
 --fp16 True \
 --packing False \
---learning_rate 4e-6 \
+--learning_rate 4e-5 \
 --lr_scheduler_type "cosine" \
 --weight_decay 0.0 \
 --warmup_ratio 0.0 \
@@ -26,7 +26,7 @@ OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_qlora.yam
 --per_device_eval_batch_size 4 \
 --gradient_checkpointing True \
 --use_reentrant True \
---gradient_accumulation_steps 4 \
+--gradient_accumulation_steps 1 \
 --dataset_text_field "content" \
 --use_flash_attn False \
 --use_peft_lora True \
