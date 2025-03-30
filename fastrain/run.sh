@@ -1,10 +1,10 @@
 OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_qlora.yaml" train.py \
 --seed 100 \
---model_name_or_path "/home/bbadger/Desktop/qwen-2.5-7b-cinstruct" \
+--model_name_or_path "/home/bbadger/Desktop/llama-3.1-8b-instruct" \
 --dataset_path "open-r1/codeforces-cots" \
 --add_special_tokens False \
 --append_concat_token False \
---max_seq_len 8192 \
+--max_seq_len 32768 \
 --num_train_epochs 5 \
 --logging_steps 1 \
 --log_level "info" \
@@ -31,7 +31,7 @@ OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_qlora.yam
 --use_flash_attn False \
 --use_peft_lora True \
 --lora_r 64 \
---lora_alpha 32 \
+--lora_alpha 64 \
 --lora_dropout 0. \
 --lora_target_modules "all-linear" \
 --use_4bit_quantization True \

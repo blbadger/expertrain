@@ -11,7 +11,8 @@ from trl import SFTTrainer
 from utils import create_and_prepare_model
 import json
 import mlflow
-from transformers import DataCollatorForLanguageModeling, DataCollatorForCompletionOnlyLM
+from transformers import DataCollatorForLanguageModeling
+from trl import DataCollatorForCompletionOnlyLM
 from datasets import Dataset, load_dataset, load_from_disk, concatenate_datasets
 import warnings
 warnings.filterwarnings("ignore")
