@@ -178,9 +178,10 @@ def main(model_args, data_args, training_args):
 			{"role": "user", "content":"@|@"},
 			{"role": "assistant", "content":"@|@"},
 		]
-		instruction_template = tokenizer.decode(tokenizer.apply_chat_template(mock)).split("@|@")[1]
+		response_template = tokenizer.decode(tokenizer.apply_chat_template(mock)).split("@|@")[1]
+		print (f"Response template: {response_template}")
 		data_collator = DataCollatorForCompletionOnlyLM(
-			instruction_template=instruction_template,
+			response_template=response_template,
 			tokenizer=tokenizer, 
 			mlm=False
 		)
