@@ -150,9 +150,8 @@ def main(model_args, data_args, training_args):
 
 	if 'cots' in data_path:
 		dataset = load_dataset("open-r1/codeforces-cots", "solutions_decontaminated", split="train")
-		python_dataset = load_dataset(data_path, "solutions_py_decontaminated", split="train")
-		dataset = concatenate_datasets((dataset, python_dataset))
-
+		# python_dataset = load_dataset(data_path, "solutions_py_decontaminated", split="train")
+		# dataset = concatenate_datasets((dataset, python_dataset))
 
 	else:
 		dataset = load_from_disk(data_path)
@@ -171,13 +170,25 @@ def main(model_args, data_args, training_args):
 		test_text_dataset = Dataset.from_dict(test_text)
 
 	else:
+		# train on completions only
+
+		# obtain the chat template and 
+		mock = [
+			{"role": "user", "content":"@|@"},
+			{"role": "assistant", "content":"@|@"},
+		]
+		instruction_template = tokenizer.decode(tokenizer.apply_chat_template(mock)).split("@|@")[1]
+		data_collator = DataCollatorForCompletionOnlyLM(
+			instruction_template=instruction_template,
+			tokenizer=tokenizer, 
+			mlm=False
+		)
 		if 'bird' in str(data_path):
 			train_text = dataset
 			test_text = load_from_disk('/home/bbadger/experiments/bird_dev_dataset')
 		else:
 			split_index=200
 			train_text, test_text = dataset.skip(split_index), dataset.take(split_index)
-
 	collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
 	training_args.packing=False

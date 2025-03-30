@@ -148,8 +148,8 @@ def main(model_args, data_args, training_args):
 	data_path = data_args.dataset_path
 	if 'cots' in data_path:
 		dataset = load_dataset(data_path, "solutions_decontaminated", split="train")
-		python_dataset = load_dataset(data_path, "solutions_py_decontaminated", split="train")
-		dataset = concatenate_datasets(dataset, python_dataset)
+		# python_dataset = load_dataset(data_path, "solutions_py_decontaminated", split="train")
+		# dataset = concatenate_datasets((dataset, python_dataset))
 	else:
 		if 'huggingface' in data_path.lower():
 			dataset = load_dataset(data_path, split="train", name="sample-10BT", streaming=False)
@@ -160,7 +160,6 @@ def main(model_args, data_args, training_args):
 			print ("no dataset found")
 
 	print ('dataset loaded')
-
 
 	block_text = len(dataset) == 1
 	print (f"Block text: {block_text}")
