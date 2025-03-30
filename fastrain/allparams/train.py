@@ -11,7 +11,7 @@ from trl import SFTTrainer, SFTConfig
 from utils import create_and_prepare_model
 import json
 import mlflow
-from transformers import DataCollatorForLanguageModeling
+from trl import DataCollatorForLanguageModeling
 from datasets import Dataset, load_dataset, load_from_disk, concatenate_datasets
 import warnings
 warnings.filterwarnings("ignore")
@@ -168,18 +168,17 @@ def main(model_args, data_args, training_args):
 
 		test_text = {'text': list(test_text)}
 		test_text_dataset = Dataset.from_dict(test_text)
+		collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
 	else:
-		# train on completions only
-
-		# obtain the chat template and 
 		mock = [
 			{"role": "user", "content":"@|@"},
 			{"role": "assistant", "content":"@|@"},
 		]
-		instruction_template = tokenizer.decode(tokenizer.apply_chat_template(mock)).split("@|@")[1]
+		response_template = tokenizer.decode(tokenizer.apply_chat_template(mock)).split("@|@")[1]
+		print (f"Response template: {response_template}")
 		data_collator = DataCollatorForCompletionOnlyLM(
-			instruction_template=instruction_template,
+			response_template=response_template,
 			tokenizer=tokenizer, 
 			mlm=False
 		)
@@ -189,7 +188,6 @@ def main(model_args, data_args, training_args):
 		else:
 			split_index=200
 			train_text, test_text = dataset.skip(split_index), dataset.take(split_index)
-	collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
 	training_args.packing=False
 	training_args.dataset_text_field=data_args.dataset_text_field
@@ -202,7 +200,8 @@ def main(model_args, data_args, training_args):
 		args=training_args,
 		train_dataset=train_text,
 		eval_dataset=test_text,
-		peft_config=peft_config,	
+		peft_config=peft_config,
+		data_collator=data_collator
 	)
 
 	trainer.accelerator.print(f"{trainer.model}")
