@@ -11,7 +11,7 @@ from trl import SFTTrainer
 from utils import create_and_prepare_model
 import json
 import mlflow
-from transformers import DataCollatorForLanguageModeling
+from transformers import DataCollatorForLanguageModeling, DataCollatorForCompletionOnlyLM
 from datasets import Dataset, load_dataset, load_from_disk, concatenate_datasets
 import warnings
 warnings.filterwarnings("ignore")
@@ -108,7 +108,7 @@ def tile_inputs(input_ids, tokenizer, tile_overlap=20, tile_size=1024):
 	return tiled_arr
 
 def tokenize_input(text, tokenizer, tile_size=1024, overlap_size=20):
-	# assumes dataset is not large (< 1b samples) and can be loaded in memory
+	# assumes dataset is not large (< 10b samples) and can be loaded in memory
 	all_data = []
 	for i, text_file in enumerate(text):
 		if isinstance(text_file, dict):
@@ -159,35 +159,37 @@ def main(model_args, data_args, training_args):
 			print ("no dataset found")
 
 	print ('dataset loaded')
-	#print ("Training samples: ", len(train_text))
-	#print ("Test samples: ", len(test_text))
-	#print ("Train sample 0 tokens: ", len(train_data[0]))
-	collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
+
 
 	block_text = len(dataset) == 1
 	print (f"Block text: {block_text}")
 	if block_text:
+		data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 		train_data = tokenize_input(dataset, tokenizer, tile_size=data_args.max_seq_length)
-		test_data = tokenize_input(dataset, tokenizer, tile_size=data_args.max_seq_length)
+		dataset_split = int(len(train_data) * 0.8)
+		train_data, test_data = train_data[:dataset_split], train_data[dataset_split:]
 		train_text, test_text = detokenize_input(train_data, tokenizer), detokenize_input(test_data, tokenizer)
 		# for sft trainer
 		train_text = {'text': list(train_text)}
-		train_text_dataset = Dataset.from_dict(train_text)
-
 		test_text = {'text': list(test_text)}
-		test_text_dataset = Dataset.from_dict(test_text)
 
 	else:
+		mock = [
+			{"role": "user", "content":"@|@"},
+			{"role": "assistant", "content":"@|@"},
+		]
+		instruction_template = tokenizer.decode(tokenizer.apply_chat_template(mock)).split("@|@")[1]
+		data_collator = DataCollatorForCompletionOnlyLM(
+			instruction_template=instruction_template,
+			tokenizer=tokenizer, 
+			mlm=False
+		)
 		if 'bird' in str(data_path):
 			train_text = dataset
 			test_text = load_from_disk('/home/bbadger/experiments/bird_dev_dataset')
 		else:
 			split_index=200
 			train_text, test_text = dataset.skip(split_index), dataset.take(split_index)
-	
-	#print (tokenizer.eos_token_id)
-	#tokenizer.eos_token_id = tokenizer.encode('<|endoftext|>')[0]
-	#print (tokenizer.eos_token_id)
 
 	trainer = SFTTrainer(
 		model=model,
@@ -196,6 +198,7 @@ def main(model_args, data_args, training_args):
 		train_dataset=train_text,
 		eval_dataset=test_text,
 		peft_config=peft_config,
+		data_collator=data_collator
 	)
 	
 	trainer.accelerator.print(f"{trainer.model}")
