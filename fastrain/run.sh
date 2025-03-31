@@ -4,7 +4,7 @@ OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_qlora.yam
 --dataset_path "open-r1/codeforces-cots" \
 --add_special_tokens False \
 --append_concat_token False \
---max_seq_length 4096 \
+--max_seq_length 32768 \
 --num_train_epochs 3 \
 --logging_steps 20 \
 --log_level "info" \

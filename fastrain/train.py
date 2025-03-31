@@ -8,7 +8,7 @@ import trl
 import torch
 from transformers import HfArgumentParser, TrainingArguments, set_seed
 from trl import SFTTrainer, SFTConfig
-from utils import create_and_prepare_model
+from utils import create_and_prepare_model, tokenize_input, tile_inputs, detokenize_input
 import json
 import mlflow
 from transformers import DataCollatorForLanguageModeling
@@ -16,14 +16,14 @@ from trl import DataCollatorForCompletionOnlyLM
 from datasets import Dataset, load_dataset, load_from_disk, concatenate_datasets
 import warnings
 warnings.filterwarnings("ignore")
-from datasets import disable_caching
 
+
+from datasets import disable_caching
 disable_caching()
 
 # parse args
 @dataclass
 class ModelArguments:
-	
 	model_name_or_path: str = field(
 		metadata={"help": "Path to pretrained model or model identifier"}
 		)
@@ -88,56 +88,6 @@ class DataTrainingArguments:
 		default="train,test"
 		)
 
-def tile_inputs(input_ids, tokenizer, tile_overlap=20, tile_size=1024):
-	text_length = len(input_ids[0])
-	assert text_length >= tile_overlap, "Text must be longer than overlap to tile"
-
-	i, tiled_arr = 0, []
-	while i < text_length:
-		if i + tile_size <= text_length:
-			tokens = input_ids[0][i:i+tile_size]
-			tiled_arr.append(tokens)
-		else:
-			# pad the last tile
-			tokens = input_ids[0][i:i+tile_size]
-			pad_length = tile_size - len(tokens)
-			tokens = torch.nn.functional.pad(
-				tokens,
-				(0, pad_length),
-				mode='constant', 
-				value=tokenizer.pad_token_id
-				)
-			tiled_arr.append(tokens)
-		i += tile_size - tile_overlap
-	return tiled_arr
-
-def tokenize_input(text, tokenizer, tile_size=1024, overlap_size=20):
-	# assumes dataset is not large (< 10b samples) and can be loaded in memory
-	all_data = []
-	for i, text_file in enumerate(text):
-		if isinstance(text_file, dict):
-			text_file = text_file['text']
-		input_ids = tokenizer.encode(
-			text_file,
-			add_special_tokens=False,
-			return_tensors="pt",
-			truncation=False
-			)
-
-		if len(input_ids[0]) < overlap_size:
-			continue
-		data = tile_inputs(input_ids, tokenizer, tile_size=tile_size, tile_overlap=overlap_size)
-		all_data += data
-	return all_data
-
-
-def detokenize_input(tokens, tokenizer):
-	text = []
-	for i, tensor in enumerate(tokens):
-		text_input = tokenizer.decode(tensor, skip_special_tokens=True)
-		text.append(text_input)
-	return text
-
 
 def main(model_args, data_args, training_args):
 	set_seed(training_args.seed)
@@ -150,8 +100,7 @@ def main(model_args, data_args, training_args):
 
 	data_path = data_args.dataset_path
 	if 'cots' in data_path:
-		dataset = load_dataset(data_path, "solutions_py_decontaminated", split="train[:400]", columns=["messages"])
-		print (dataset[5])
+		dataset = load_dataset(data_path, "solutions_decontaminated", split="train", columns=["messages"])
 		# python_dataset = load_dataset(data_path, "solutions_py_decontaminated", split="train")
 		# dataset = concatenate_datasets((dataset, python_dataset))
 	else:
@@ -173,6 +122,7 @@ def main(model_args, data_args, training_args):
 		dataset_split = int(len(train_data) * 0.8)
 		train_data, test_data = train_data[:dataset_split], train_data[dataset_split:]
 		train_text, test_text = detokenize_input(train_data, tokenizer), detokenize_input(test_data, tokenizer)
+
 		# for sft trainer
 		train_text = {'text': list(train_text)}
 		test_text = {'text': list(test_text)}
@@ -222,9 +172,6 @@ def main(model_args, data_args, training_args):
 	)
 	trainer.accelerator.print(f"{trainer.model}")
 	trainer.model.print_trainable_parameters()
-	#trainer.model = trainer.model.to(torch.half)
-	#for name, param in trainer.model.named_parameters():
-	#	trainer.accelerator.print('After trainer: ', name, param.dtype, param.device)
 
 	# saving final model
 #	if trainer.is_fsdp_enabled:

@@ -8,18 +8,22 @@ import trl
 import torch
 from transformers import HfArgumentParser, TrainingArguments, set_seed
 from trl import SFTTrainer, SFTConfig
-from utils import create_and_prepare_model
+from utils import create_and_prepare_model, tile_inputs, tokenize_input, detokenize_input
 import json
 import mlflow
 from trl import DataCollatorForLanguageModeling
 from datasets import Dataset, load_dataset, load_from_disk, concatenate_datasets
+
 import warnings
 warnings.filterwarnings("ignore")
+
+from datasets import disable_caching
+disable_caching()
+
 
 # parse args
 @dataclass
 class ModelArguments:
-	
 	model_name_or_path: str = field(
 		metadata={"help": "Path to pretrained model or model identifier"}
 		)
@@ -84,59 +88,6 @@ class DataTrainingArguments:
 		default="train,test"
 		)
 
-def tile_inputs(input_ids, tokenizer, tile_overlap=20, tile_size=1024):
-	text_length = len(input_ids[0])
-	assert text_length >= tile_overlap, "Text must be longer than overlap to tile"
-
-	i, tiled_arr = 0, []
-	while i < text_length:
-		if i + tile_size <= text_length:
-			tokens = input_ids[0][i:i+tile_size]
-			tiled_arr.append(tokens)
-		else:
-			# pad the last tile
-			tokens = input_ids[0][i:i+tile_size]
-			pad_length = tile_size - len(tokens)
-			tokens = torch.nn.functional.pad(
-				tokens,
-				(0, pad_length),
-				mode='constant', 
-				value=tokenizer.pad_token_id
-				)
-			tiled_arr.append(tokens)
-		i += tile_size - tile_overlap
-
-	return tiled_arr
-
-def tokenize_input(text, tokenizer, tile_size=1024, overlap_size=20):
-	# assumes dataset is not large (< 1b samples) and can be loaded in memory
-	all_data = []
-	for i, text_file in enumerate(text):
-		if isinstance(text_file, dict):
-			text_file = text_file['text']
-		
-		input_ids = tokenizer.encode(
-			text_file,
-			add_special_tokens=False,
-			return_tensors="pt",
-			truncation=False
-			)
-
-		if len(input_ids[0]) < overlap_size:
-			continue
-		data = tile_inputs(input_ids, tokenizer, tile_size=tile_size, tile_overlap=overlap_size)
-		all_data += data
-	return all_data
-
-
-def detokenize_input(tokens, tokenizer):
-	text = []
-	for i, tensor in enumerate(tokens):
-		text_input = tokenizer.decode(tensor, skip_special_tokens=True)
-		text.append(text_input)
-	return text
-
-
 def main(model_args, data_args, training_args):
 	set_seed(training_args.seed)
 	model, peft_config, tokenizer = create_and_prepare_model(model_args, data_args, training_args)
@@ -189,19 +140,26 @@ def main(model_args, data_args, training_args):
 			split_index=200
 			train_text, test_text = dataset.skip(split_index), dataset.take(split_index)
 
-	training_args.packing=False
-	training_args.dataset_text_field=data_args.dataset_text_field
-	training_args.optim="adamw_torch" # "paged_adamw_32bit"
-	#training_args.optim_target_modules=["q_proj", "k_proj", "v_proj", "up_proj", "down_proj", "o_proj", "gate_proj"]
+	training_args.max_length = data_args.max_seq_length
+	training_args.max_seq_length = data_args.max_seq_length
+	training_args.optim = "paged_adamw_8bit"
+	config = SFTConfig(
+		max_length = data_args.max_seq_length,
+		max_seq_length = data_args.max_seq_length,	
+	)
+
+	# add training_args to SFTConfig	
+	for key in training_args.__dict__.keys():
+		if key in config.__dict__.keys():
+			config.__dict__[key] = training_args.__dict__[key]
 
 	trainer = SFTTrainer(
 		model=model,
-		tokenizer=tokenizer,
-		args=training_args,
+		args=config,
 		train_dataset=train_text,
 		eval_dataset=test_text,
 		peft_config=peft_config,
-		data_collator=data_collator
+		data_collator=transformers.DataCollatorForLanguageModeling(tokenizer, mlm=False)
 	)
 
 	trainer.accelerator.print(f"{trainer.model}")
