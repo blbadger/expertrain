@@ -199,22 +199,19 @@ def main(model_args, data_args, training_args):
 			train_text, test_text = dataset.skip(split_index), dataset.take(split_index)
 
 	#todo: 8-bit optims fail to send params from cpu during the backward, see if this can be debugged
-	training_args.optim = "adamw_torch" # "paged_adamw_32bit"
 	training_args.max_length = data_args.max_seq_length
 	training_args.max_seq_length = data_args.max_seq_length
-	
+	training_args.optim = "adamw_torch"	
 	config = SFTConfig(
-		optim = "paged_adamw_8bit",
 		max_length = data_args.max_seq_length,
 		max_seq_length = data_args.max_seq_length,	
 	)
-	
+
+	# add training_args to SFTConfig	
 	for key in training_args.__dict__.keys():
 		if key in config.__dict__.keys():
-			print (key)
 			config.__dict__[key] = training_args.__dict__[key]
 
-	print (config)
 	trainer = SFTTrainer(
 		model=model,
 		args=config,
