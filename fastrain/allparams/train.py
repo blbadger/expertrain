@@ -18,7 +18,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 from datasets import disable_caching
-disable_caching()
+#disable_caching()
 
 
 # parse args
