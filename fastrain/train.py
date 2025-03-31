@@ -16,6 +16,9 @@ from trl import DataCollatorForCompletionOnlyLM
 from datasets import Dataset, load_dataset, load_from_disk, concatenate_datasets
 import warnings
 warnings.filterwarnings("ignore")
+from datasets import disable_caching
+
+disable_caching()
 
 # parse args
 @dataclass
@@ -72,7 +75,7 @@ class DataTrainingArguments:
 		default="text",
 		metadata={"help": "Dataset field to use as input text"}
 		)
-	max_seq_len: Optional[int] = field(default=512)
+	max_seq_length: Optional[int] = field(default=512)
 	append_concat_token: Optional[bool] = field(
 		default=False,
 		metadata={"help": "If True, appends `eos_token_id` at the end of each sample being packed."}
@@ -147,7 +150,8 @@ def main(model_args, data_args, training_args):
 
 	data_path = data_args.dataset_path
 	if 'cots' in data_path:
-		dataset = load_dataset(data_path, "solutions_decontaminated", split="train")
+		dataset = load_dataset(data_path, "solutions_py_decontaminated", split="train[:400]", columns=["messages"])
+		print (dataset[5])
 		# python_dataset = load_dataset(data_path, "solutions_py_decontaminated", split="train")
 		# dataset = concatenate_datasets((dataset, python_dataset))
 	else:
@@ -165,7 +169,7 @@ def main(model_args, data_args, training_args):
 	print (f"Block text: {block_text}")
 	if block_text:
 		data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
-		train_data = tokenize_input(dataset, tokenizer, tile_size=data_args.max_seq_length)
+		train_data = tokenize_input(dataset, tokenizer, tile_size=data_args.max_seq_len)
 		dataset_split = int(len(train_data) * 0.8)
 		train_data, test_data = train_data[:dataset_split], train_data[dataset_split:]
 		train_text, test_text = detokenize_input(train_data, tokenizer), detokenize_input(test_data, tokenizer)
@@ -196,22 +200,29 @@ def main(model_args, data_args, training_args):
 
 	#todo: 8-bit optims fail to send params from cpu during the backward, see if this can be debugged
 	training_args.optim = "adamw_torch" # "paged_adamw_32bit"
-	training_args.max_length = data_args.max_seq_len
-	print (training_args.max_length, training_args.optim)
-		
-	# config = SFTConfig(
-	# optim = "paged_adamw_8bit",
-	# max_length = data_args.max_seq_len
-	# )
+	training_args.max_length = data_args.max_seq_length
+	training_args.max_seq_length = data_args.max_seq_length
+	
+	config = SFTConfig(
+		optim = "paged_adamw_8bit",
+		max_length = data_args.max_seq_length,
+		max_seq_length = data_args.max_seq_length,	
+	)
+	
+	for key in training_args.__dict__.keys():
+		if key in config.__dict__.keys():
+			print (key)
+			config.__dict__[key] = training_args.__dict__[key]
+
+	print (config)
 	trainer = SFTTrainer(
 		model=model,
-		args=training_args,
+		args=config,
 		train_dataset=train_text,
 		eval_dataset=test_text,
 		peft_config=peft_config,
 		data_collator=transformers.DataCollatorForLanguageModeling(tokenizer, mlm=False)
 	)
-	
 	trainer.accelerator.print(f"{trainer.model}")
 	trainer.model.print_trainable_parameters()
 	#trainer.model = trainer.model.to(torch.half)
