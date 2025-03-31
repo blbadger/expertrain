@@ -7,11 +7,11 @@ import transformers
 import trl
 import torch
 from transformers import HfArgumentParser, TrainingArguments, set_seed
-from trl import SFTTrainer, SFTConfig
+from trl import SFTTrainer, SFTConfig, DataCollatorForCompletionOnlyLM
 from utils import create_and_prepare_model, tile_inputs, tokenize_input, detokenize_input
 import json
 import mlflow
-from trl import DataCollatorForLanguageModeling
+from transformers import DataCollatorForLanguageModeling
 from datasets import Dataset, load_dataset, load_from_disk, concatenate_datasets
 
 import warnings

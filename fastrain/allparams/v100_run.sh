@@ -16,18 +16,18 @@ OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_allparams
 --save_steps 500 \
 --bf16 False \
 --fp16 True \
---learning_rate 4e-5 \
+--learning_rate 4e-6 \
 --lr_scheduler_type "cosine" \
 --weight_decay 0.0 \
 --warmup_ratio 0.0 \
 --max_grad_norm 1.0 \
---output_dir "/home/bbadger/experiments/llama-3.1-cfcots" \
+--output_dir "/home/bbadger/experiments/llama-3.1-8b-codeforcescots_lr0.4" \
 --per_device_train_batch_size 4 \
 --per_device_eval_batch_size 4 \
---gradient_checkpointing False \
+--gradient_checkpointing True \
 --gradient_accumulation_steps 1 \
 --dataset_text_field "messages" \
 --use_flash_attn False \
 --use_peft_lora False \
 --report_to "none" \
-#--resume_from_checkpoint "/home/bbadger/experiments/llama-3.1-8b-codeforcescots/checkpoint-2000"
+
