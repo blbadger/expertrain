@@ -175,7 +175,8 @@ def main(model_args, data_args, training_args):
 			{"role": "user", "content":"@|@"},
 			{"role": "assistant", "content":"@|@"},
 		]
-		response_template = tokenizer.decode(tokenizer.apply_chat_template(mock)).split("@|@")[1]
+		#response_template = tokenizer.decode(tokenizer.apply_chat_template(mock)).split("@|@")[1]
+		response_template = '###'
 		print (f"Response template: {response_template}")
 		data_collator = DataCollatorForCompletionOnlyLM(
 			response_template=response_template,
@@ -184,7 +185,7 @@ def main(model_args, data_args, training_args):
 		)
 		if 'bird' in str(data_path):
 			train_text = dataset
-			test_text = load_from_disk('/home/bbadger/experiments/bird_dev_dataset')
+			test_text = load_from_disk('/home/bbadger/experiments/bird_dev_dataset_completion')
 		else:
 			split_index=200
 			train_text, test_text = dataset.skip(split_index), dataset.take(split_index)

@@ -18,7 +18,7 @@ import warnings
 warnings.filterwarnings("ignore")
 from datasets import disable_caching
 
-disable_caching()
+#disable_caching()
 
 # parse args
 @dataclass
@@ -150,8 +150,7 @@ def main(model_args, data_args, training_args):
 
 	data_path = data_args.dataset_path
 	if 'cots' in data_path:
-		dataset = load_dataset(data_path, "solutions_py_decontaminated", split="train[:400]", columns=["messages"])
-		print (dataset[5])
+		dataset = load_dataset(data_path, "solutions_py_decontaminated", split="train", columns=["messages"])
 		# python_dataset = load_dataset(data_path, "solutions_py_decontaminated", split="train")
 		# dataset = concatenate_datasets((dataset, python_dataset))
 	else:
@@ -182,18 +181,19 @@ def main(model_args, data_args, training_args):
 			{"role": "user", "content":"@|@"},
 			{"role": "assistant", "content":"@|@"},
 		]
-		instruction_template = tokenizer.decode(tokenizer.apply_chat_template(mock)).split("@|@")[0]		
-		response_template = tokenizer.decode(tokenizer.apply_chat_template(mock)).split("@|@")[1]
-		print (f"Input template: {instruction_template}Response template: {response_template}")
+		#instruction_template = tokenizer.decode(tokenizer.apply_chat_template(mock)).split("@|@")[0]		
+		#response_template = tokenizer.decode(tokenizer.apply_chat_template(mock)).split("@|@")[1]
+		response_template = '###'
+		print (f"Response template: {response_template}")
 		data_collator = DataCollatorForCompletionOnlyLM(
-			instruction_template=instruction_template,
+			#instruction_template=instruction_template,
 			response_template=response_template,
 			tokenizer=tokenizer, 
 			mlm=False
 		)
 		if 'bird' in str(data_path):
 			train_text = dataset
-			test_text = load_from_disk('/home/bbadger/experiments/bird_dev_dataset')
+			test_text = load_from_disk('/home/bbadger/experiments/bird_dev_dataset_completion')
 		else:
 			split_index=200
 			train_text, test_text = dataset.skip(split_index), dataset.take(split_index)
@@ -211,14 +211,14 @@ def main(model_args, data_args, training_args):
 	for key in training_args.__dict__.keys():
 		if key in config.__dict__.keys():
 			config.__dict__[key] = training_args.__dict__[key]
-
+	print (config)
 	trainer = SFTTrainer(
 		model=model,
 		args=config,
 		train_dataset=train_text,
 		eval_dataset=test_text,
 		peft_config=peft_config,
-		data_collator=transformers.DataCollatorForLanguageModeling(tokenizer, mlm=False)
+		data_collator=data_collator #transformers.DataCollatorForLanguageModeling(tokenizer, mlm=False)
 	)
 	trainer.accelerator.print(f"{trainer.model}")
 	trainer.model.print_trainable_parameters()

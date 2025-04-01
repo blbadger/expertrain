@@ -1,17 +1,18 @@
 OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_qlora.yaml" train.py \
 --seed 100 \
---model_name_or_path "/home/bbadger/Desktop/llama-3.1-8b-instruct" \
---dataset_path "open-r1/codeforces-cots" \
+--model_name_or_path "/home/bbadger/Desktop/llama-3.2-3b-instruct" \
+--dataset_path "/home/bbadger/experiments/bird_train_dataset_completion" \
 --add_special_tokens False \
 --append_concat_token False \
 --max_seq_length 4096 \
---num_train_epochs 3 \
+--num_train_epochs 5 \
 --logging_steps 20 \
 --log_level "info" \
 --logging_strategy "steps" \
---eval_steps 1 \
+--eval_strategy "steps" \
+--eval_steps 100 \
 --save_strategy "steps" \
---save_steps 500 \
+--save_steps 200 \
 --bf16 False \
 --fp16 True \
 --packing False \
@@ -20,12 +21,12 @@ OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_qlora.yam
 --weight_decay 0.0 \
 --warmup_ratio 0.0 \
 --max_grad_norm 1.0 \
---output_dir "/home/bbadger/experiments/llama3.1-8b-cfcots-lora" \
+--output_dir "/home/bbadger/experiments/llama3.2-3b-bird-lora" \
 --per_device_train_batch_size 1 \
 --per_device_eval_batch_size 1 \
 --gradient_checkpointing True \
 --use_reentrant True \
---gradient_accumulation_steps 1 \
+--gradient_accumulation_steps 4 \
 --dataset_text_field "messages" \
 --use_flash_attn False \
 --use_peft_lora True \
@@ -38,4 +39,4 @@ OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_qlora.yam
 --bnb_4bit_compute_dtype "float16" \
 --bnb_4bit_quant_storage_dtype "float16" \
 --report_to "none"
-#--resume_from_checkpoint "/home/bbadger/experiments/llama-3.1-8b-codeforcescots-qlora/checkpoint-700"
+#--resume_from_checkpoint "/home/bbadger/experiments/llama3.2-3b-bird-lora/checkpoint-3500"
