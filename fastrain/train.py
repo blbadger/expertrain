@@ -153,14 +153,15 @@ def main(model_args, data_args, training_args):
 	training_args.max_seq_length = data_args.max_seq_length
 	training_args.optim = "adamw_torch"	
 	config = SFTConfig(
+		**training_args.to_dict(),
 		max_length = data_args.max_seq_length,
 		max_seq_length = data_args.max_seq_length,	
 	)
 
-	# add training_args to SFTConfig	
-	for key in training_args.__dict__.keys():
-		if key in config.__dict__.keys():
-			config.__dict__[key] = training_args.__dict__[key]
+	# add training_args to SFTConfig if not sending training args to dict
+	# for key in training_args.__dict__.keys():
+	# 	if key in config.__dict__.keys():
+	# 		config.__dict__[key] = training_args.__dict__[key]
 
 	trainer = SFTTrainer(
 		model=model,

@@ -125,3 +125,18 @@ def detokenize_input(tokens, tokenizer):
 		text_input = tokenizer.decode(tensor, skip_special_tokens=True)
 		text.append(text_input)
 	return text
+
+
+def formatting_prompts_func_qwen(batch):
+	output_texts = []
+	for i in range(len(batch['id'])):
+		res = batch[res_key][i] 
+		text = f'''<|im_start|>system
+You are Qwen, created by Alibaba Cloud. You are a helpful assistant.<|im_end|>
+<|im_start|>user
+{batch['prompt_messages'][i][0]['content']}<|im_end|>
+<|im_start|>assistant
+{res}<|im_end|>
+'''
+		output_texts.append(text)
+	return output_texts
