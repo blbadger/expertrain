@@ -77,12 +77,12 @@ class DataTrainingArguments:
 	
 parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
 model_args, data_args, training_args = parser.parse_args_into_dataclasses()
-
 model, peft_config, tokenizer = create_and_prepare_model(model_args, data_args, training_args, device='cpu')
-model = PeftModel.from_pretrained(model, training_args.lora_weights_path).to('cpu')
+model = PeftModel.from_pretrained(model, data_args.lora_weights_path).to('cpu')
 print (f"Model pre-merge: {model}")
 model = model.merge_and_unload()
 print (f"Model post-merge: {model}")
-output_path = training_args.lora_weights_path + '/merged_model'
+output_path = data_args.lora_weights_path + '/merged_model'
 tokenizer.save_pretrained(output_path)
+print (f"Model saved to {output_path}")
 model.save_pretrained(output_path)

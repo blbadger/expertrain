@@ -7,14 +7,17 @@ import transformers
 import trl
 import torch
 from transformers import HfArgumentParser, TrainingArguments, set_seed
-from trl import SFTTrainer, SFTConfig
+from trl import SFTTrainer, SFTConfig, DataCollatorForCompletionOnlyLM
 from utils import create_and_prepare_model
 import json
 import mlflow
-from trl import DataCollatorForLanguageModeling
+from transformers import DataCollatorForLanguageModeling
 from datasets import Dataset, load_dataset, load_from_disk, concatenate_datasets
 import warnings
 warnings.filterwarnings("ignore")
+
+from datasets import disable_caching
+disable_caching()
 
 # parse args
 @dataclass
@@ -193,12 +196,15 @@ def main(model_args, data_args, training_args):
 	training_args.packing=False
 	training_args.dataset_text_field=data_args.dataset_text_field
 	training_args.optim="adamw_torch" # "paged_adamw_32bit"
-	#training_args.optim_target_modules=["q_proj", "k_proj", "v_proj", "up_proj", "down_proj", "o_proj", "gate_proj"]
-
+	config = SFTConfig(
+		**training_args.to_dict(),
+		max_length = data_args.max_seq_length,
+		max_seq_length = data_args.max_seq_length,	
+	)	
+	print (config)
 	trainer = SFTTrainer(
 		model=model,
-		tokenizer=tokenizer,
-		args=training_args,
+		args=config,
 		train_dataset=train_text,
 		eval_dataset=test_text,
 		peft_config=peft_config,
