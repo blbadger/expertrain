@@ -13,7 +13,7 @@ OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_allparams
 --evaluation_strategy "steps" \
 --eval_steps 100 \
 --save_strategy "steps" \
---save_steps 500 \
+--save_steps 200 \
 --bf16 True \
 --fp16 False \
 --learning_rate 4e-5 \

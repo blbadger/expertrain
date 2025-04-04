@@ -142,7 +142,7 @@ def main(model_args, data_args, training_args):
 
 	training_args.max_length = data_args.max_seq_length
 	training_args.max_seq_length = data_args.max_seq_length
-	training_args.optim = "paged_adamw_8bit"
+	training_args.optim = "adamw_torch"
 	config = SFTConfig(
 		max_length = data_args.max_seq_length,
 		max_seq_length = data_args.max_seq_length,	
