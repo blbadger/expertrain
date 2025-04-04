@@ -1,17 +1,18 @@
+import unsloth
 import os
 from enum import Enum
+from unsloth import FastModel, FastLanguageModel
 import torch
 from datasets import DatasetDict, load_dataset, load_from_disk
 from datasets.builder import DatasetGenerationError
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from peft import LoraConfig
-from unsloth import FastLanguageModel
 
 
 def prepare_unsloth(args, data_args, training_args, device=None):
 	model, tokenizer = FastModel.from_pretrained(
 	    model_name = args.model_name_or_path,
-	    max_seq_length = training_args.max_seq_length, # Choose any for long context!
+	    max_seq_length = data_args.max_seq_length, # Choose any for long context!
 	    load_in_4bit = True,  # 4 bit quantization to reduce memory
 	    load_in_8bit = False, # [NEW!] A bit more accurate, uses 2x memory
 	    full_finetuning = False, # [NEW!] We have full finetuning now!
@@ -27,7 +28,7 @@ def prepare_unsloth(args, data_args, training_args, device=None):
 	    bias = "none",    # Supports any, but = "none" is optimized
 	    use_gradient_checkpointing = "unsloth", # True or "unsloth" for very long context
 	    random_state = 3407,
-	    max_seq_length = training_args.max_seq_length,
+	    max_seq_length = data_args.max_seq_length,
 	    use_rslora = False,  # We support rank stabilized LoRA
 	    loftq_config = None, # And LoftQ
 	)

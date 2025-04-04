@@ -2,7 +2,7 @@ import os
 import sys
 from dataclasses import dataclass, field
 from typing import Optional
-
+import unsloth
 import transformers
 import trl
 import torch
@@ -88,6 +88,34 @@ class DataTrainingArguments:
 		default="train,test"
 		)
 
+def formatting_func(sample):
+	output_texts = []
+	#print ('Sample ', sample['messages'])
+	if len(sample['messages']) > 2:
+		for i in range(len(sample['messages'])):
+			text = f'''		
+<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+
+You are a helpful assistant<|eot_id|><|start_header_id|>user<|end_header_id|>
+
+{sample['messages'][i][0]['content']}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+
+{sample['messages'][i][1]['content']}
+'''
+			output_texts.append(text)
+	else:
+		text = f'''             
+<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+
+You are a helpful assistant<|eot_id|><|start_header_id|>user<|end_header_id|>
+
+{sample['messages'][0]['content']}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+
+{sample['messages'][1]['content']}
+'''
+		output_texts.append(text)
+	return output_texts
+
 
 
 def main(model_args, data_args, training_args):
@@ -144,11 +172,10 @@ def main(model_args, data_args, training_args):
 			train_text, test_text = dataset.skip(split_index), dataset.take(split_index)
 
 	#todo: 8-bit optims fail to send params from cpu during the backward, see if this can be debugged
-	training_args.max_length = data_args.max_seq_length
 	training_args.max_seq_length = data_args.max_seq_length
 	training_args.optim = "adamw_8bit"	
 	config = SFTConfig(
-		max_length = data_args.max_seq_length,
+		per_device_train_batch_size = 1,
 		max_seq_length = data_args.max_seq_length,	
 	)
 
@@ -158,13 +185,15 @@ def main(model_args, data_args, training_args):
 			config.__dict__[key] = training_args.__dict__[key]
 
 	print (config)
-
+	#print (dataset[0]['messages'][0]['content'])
 	trainer = SFTTrainer(
 	    model = model,
-	    train_dataset = dataset,
-	    tokenizer = tokenizer,
+	    train_dataset = train_text,
+	    eval_dataset = test_text,
+            tokenizer = tokenizer,
 	    args = config,
-	    data_collator = data_collator
+	    data_collator = data_collator,
+	    formatting_func=formatting_func
 	)
 
 	# trainer.accelerator.print(f"{trainer.model}")

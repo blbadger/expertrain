@@ -1,11 +1,11 @@
-OMP_NUM_THREADS=4 python train.py \
+python unsloth_train.py \
 --seed 100 \
 --model_name_or_path "/home/bbadger/Desktop/llama-3.1-8b-instruct" \
 --dataset_path "/home/bbadger/experiments/bird_train_dataset_completion" \
 --add_special_tokens False \
 --append_concat_token False \
 --max_seq_length 8192 \
---num_train_epochs 0 \
+--num_train_epochs 5 \
 --logging_steps 20 \
 --log_level "info" \
 --logging_strategy "steps" \
@@ -16,7 +16,7 @@ OMP_NUM_THREADS=4 python train.py \
 --bf16 False \
 --fp16 True \
 --packing False \
---learning_rate 4e-5 \
+--learning_rate 7e-5 \
 --lr_scheduler_type "cosine" \
 --weight_decay 0.0 \
 --warmup_ratio 0.0 \
@@ -26,12 +26,12 @@ OMP_NUM_THREADS=4 python train.py \
 --per_device_eval_batch_size 1 \
 --gradient_checkpointing True \
 --use_reentrant True \
---gradient_accumulation_steps 8 \
+--gradient_accumulation_steps 16 \
 --dataset_text_field "messages" \
 --use_flash_attn False \
 --use_peft_lora True \
---lora_r 64 \
---lora_alpha 64 \
+--lora_r 32 \
+--lora_alpha 32 \
 --lora_dropout 0. \
 --report_to "none" \
 # --resume_from_checkpoint "/home/bbadger/experiments/llama3.2-3b-bird-lora/checkpoint-2000"
