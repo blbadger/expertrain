@@ -1,0 +1,15 @@
+artifact_uri: file:///home/bbadger/Desktop/expertrain/fastrain/mlruns/0/22f397a557504d1ba600782e8d8af236/artifacts
+end_time: 1743737587590
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 22f397a557504d1ba600782e8d8af236
+run_name: outputs
+run_uuid: 22f397a557504d1ba600782e8d8af236
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1743737532415
+status: 3
+tags: []
+user_id: bbadger

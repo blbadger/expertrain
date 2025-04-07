@@ -4,7 +4,7 @@ OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_qlora.yam
 --dataset_path "/home/bbadger/experiments/bird_train_dataset" \
 --add_special_tokens False \
 --append_concat_token False \
---max_seq_len 8192 \
+--max_seq_len 2048 \
 --num_train_epochs 2 \
 --logging_steps 10 \
 --log_level "info" \
@@ -16,7 +16,7 @@ OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_qlora.yam
 --bf16 False \
 --fp16 True \
 --packing False \
---learning_rate 1e-6 \
+--learning_rate 2e-5 \
 --lr_scheduler_type "cosine" \
 --weight_decay 0.0 \
 --warmup_ratio 0.0 \

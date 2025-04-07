@@ -1,6 +1,6 @@
 python merge_adapters.py \
---model_name_or_path "/home/bbadger/Desktop/llama-3.2-3b-instruct" \
---lora_weights_path "/home/bbadger/experiments/llama3.2-3b-bird-lora" \
+--model_name_or_path "meta-llama/Llama-3.1-8B-Instruct" \
+--lora_weights_path "/home/bbadger/experiments/llama3.1-8b-bird-unsloth/checkpoint-1000" \
 --use_peft_lora True \
 --lora_r 64 \
 --lora_alpha 64 \

@@ -152,7 +152,7 @@ def main(model_args, data_args, training_args):
 	data_path = data_args.dataset_path
 
 	if 'cots' in data_path:
-		dataset = load_dataset("open-r1/codeforces-cots", "solutions_decontaminated", split="train")
+		dataset = load_dataset("open-r1/codeforces-cots", "solutions_decontaminated", split="train[:300]")
 		# python_dataset = load_dataset(data_path, "solutions_py_decontaminated", split="train")
 		# dataset = concatenate_datasets((dataset, python_dataset))
 
@@ -186,6 +186,7 @@ def main(model_args, data_args, training_args):
 			tokenizer=tokenizer, 
 			mlm=False
 		)
+		#data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 		if 'bird' in str(data_path):
 			train_text = dataset
 			test_text = load_from_disk('/home/bbadger/experiments/bird_dev_dataset_completion')
@@ -198,16 +199,14 @@ def main(model_args, data_args, training_args):
 	training_args.optim="adamw_torch" # "paged_adamw_32bit"
 	config = SFTConfig(
 		**training_args.to_dict(),
-		max_length = data_args.max_seq_length,
 		max_seq_length = data_args.max_seq_length,	
 	)	
-	print (config)
+	#print (config)
 	trainer = SFTTrainer(
 		model=model,
 		args=config,
 		train_dataset=train_text,
 		eval_dataset=test_text,
-		peft_config=peft_config,
 		data_collator=data_collator
 	)
 

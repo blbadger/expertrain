@@ -1,7 +1,6 @@
 import unsloth
 import os
 from enum import Enum
-from unsloth import FastModel, FastLanguageModel
 import torch
 from datasets import DatasetDict, load_dataset, load_from_disk
 from datasets.builder import DatasetGenerationError
@@ -10,6 +9,7 @@ from peft import LoraConfig
 
 
 def prepare_unsloth(args, data_args, training_args, device=None):
+	from unsloth import FastModel, FastLanguageModel
 	model, tokenizer = FastModel.from_pretrained(
 	    model_name = args.model_name_or_path,
 	    max_seq_length = data_args.max_seq_length, # Choose any for long context!

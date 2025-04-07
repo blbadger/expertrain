@@ -37,7 +37,7 @@ from torch import Tensor
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
-from transformers.models.llama.modeling_llama import (nn)
+from transformers.models.qwen2.modeling_qwen2 import (nn)
 
 def forward(self, input: Tensor) -> Tensor:
     self._check_input_dim(input)

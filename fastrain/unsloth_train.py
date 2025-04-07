@@ -88,42 +88,38 @@ class DataTrainingArguments:
 		default="train,test"
 		)
 
+QWEN_PROMPT = '''<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n<|im_start|>user\n{}<|im_end|>\n<|im_start|>assistant\n{}'''
+LLAMA_PROMPT = '''             
+<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+        
+You are a helpful assistant<|eot_id|><|start_header_id|>user<|end_header_id|> 
+    
+{}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+        
+{}
+''' 
+
+
 def formatting_func(sample):
 	output_texts = []
 	#print ('Sample ', sample['messages'])
 	if len(sample['messages']) > 2:
 		for i in range(len(sample['messages'])):
-			text = f'''		
-<|begin_of_text|><|start_header_id|>system<|end_header_id|>
-
-You are a helpful assistant<|eot_id|><|start_header_id|>user<|end_header_id|>
-
-{sample['messages'][i][0]['content']}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
-
-{sample['messages'][i][1]['content']}
-'''
+			input_text, output_text = sample['messages'][i][0]['content'], sample['messages'][i][1]['content']
+			text = QWEN_PROMPT.format(input_text, output_text)
 			output_texts.append(text)
 	else:
-		text = f'''             
-<|begin_of_text|><|start_header_id|>system<|end_header_id|>
-
-You are a helpful assistant<|eot_id|><|start_header_id|>user<|end_header_id|>
-
-{sample['messages'][0]['content']}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
-
-{sample['messages'][1]['content']}
-'''
+		input_text, output_text = sample['messages'][0]['content'], sample['messages'][1]['content']
+		text = QWEN_PROMPT.format(input_text, output_text)
 		output_texts.append(text)
 	return output_texts
-
-
 
 def main(model_args, data_args, training_args):
 	set_seed(training_args.seed)
 	model, peft_config, tokenizer = prepare_unsloth(model_args, data_args, training_args)
 	data_path = data_args.dataset_path
 	if 'cots' in data_path:
-		dataset = load_dataset(data_path, "solutions_py_decontaminated", split="train", columns=["messages"])
+		dataset = load_dataset(data_path, "solutions_decontaminated", split="train", columns=["messages"])
 		# python_dataset = load_dataset(data_path, "solutions_py_decontaminated", split="train")
 		# dataset = concatenate_datasets((dataset, python_dataset))
 	else:
@@ -192,8 +188,9 @@ def main(model_args, data_args, training_args):
 	    eval_dataset = test_text,
             tokenizer = tokenizer,
 	    args = config,
-	    data_collator = data_collator,
-	    formatting_func=formatting_func
+	    #data_collator = DataCollatorForCausalLM(tokenizer, mlm=False)  #data_collator,
+	    data_collator=data_collator,
+            formatting_func=formatting_func
 	)
 
 	# trainer.accelerator.print(f"{trainer.model}")
@@ -212,8 +209,10 @@ def main(model_args, data_args, training_args):
 	
 	if trainer.is_fsdp_enabled:
 		trainer.accelerator.state.fsdp_plugin.set_state_dict_type("FULL_STATE_DICT")
-
-	trainer.save_model()
+	
+	model.save_pretrained_merged(training_args.output_dir + '/merged_model', tokenizer, save_method = "merged_16bit",)
+	print (f"Model saved to {training_args.output_dir + '/merged_model'}")
+	#trainer.save_model()
 
 
 if __name__ == "__main__":

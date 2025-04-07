@@ -99,8 +99,7 @@ def soft_format_reward_func(completions, **kwargs) -> list[float]:
     return [0.5 if match else 0.0 for match in matches]
 
 def length_reward(completions, **kwargs):
-    """Reward function that checks if the completion has a specific format."""
-    pattern = r"<reasoning>.*?</reasoning>\s*<answer>.*?</answer>"
+    """Reward function for increased response length."""
     responses = [completion[0]["content"] for completion in completions]
     return [0.001*len(response) for response in responses]
 

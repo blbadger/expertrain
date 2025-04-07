@@ -5,8 +5,8 @@ OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_allparams
 --dataset_path "/home/bbadger/experiments/bird_train_dataset_completion" \
 --add_special_tokens False \
 --append_concat_token False \
---max_seq_len 8192 \
---num_train_epochs 5 \
+--max_seq_len 4096 \
+--num_train_epochs 2 \
 --logging_steps 10 \
 --log_level "info" \
 --logging_strategy "steps" \
@@ -16,8 +16,8 @@ OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_allparams
 --save_steps 200 \
 --bf16 False \
 --fp16 True \
---learning_rate 4e-5 \
---lr_scheduler_type "cosine" \
+--learning_rate 2e-5 \
+--lr_scheduler_type "linear" \
 --weight_decay 0.0 \
 --warmup_ratio 0.0 \
 --max_grad_norm 1.0 \
@@ -25,10 +25,10 @@ OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_allparams
 --per_device_train_batch_size 1 \
 --per_device_eval_batch_size 1 \
 --gradient_checkpointing True \
---gradient_accumulation_steps 4 \
+--gradient_accumulation_steps 1 \
 --dataset_text_field "messages" \
 --use_flash_attn False \
 --use_peft_lora False \
 --use_cpu False \
 --report_to "none" \
---use_liger_kernel True
+--use_liger_kernel False
