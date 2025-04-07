@@ -92,104 +92,104 @@ class DataTrainingArguments:
 
 def main(model_args, data_args, training_args):
         set_seed(training_args.seed)
-        model, peft_config, tokenizer = create_and_prepare_model(model_args, data_args, training_args)
+	model, peft_config, tokenizer = create_and_prepare_model(model_args, data_args, training_args)
 
-        # gradient checkpoint utils
-        model.config.use_cache = not training_args.gradient_checkpointing
-        if training_args.gradient_checkpointing:
-                training_args.gradient_checkpointing_kwargs = {"use_reentrant": model_args.use_reentrant}
+	# gradient checkpoint utils
+	model.config.use_cache = not training_args.gradient_checkpointing
+	if training_args.gradient_checkpointing:
+		training_args.gradient_checkpointing_kwargs = {"use_reentrant": model_args.use_reentrant}
 
-        data_path = data_args.dataset_path
-        if 'cots' in data_path:
-                dataset = load_dataset(data_path, "solutions_decontaminated", split="train", columns=["messages"])
-                # python_dataset = load_dataset(data_path, "solutions_py_decontaminated", split="train")
-                # dataset = concatenate_datasets((dataset, python_dataset))
-        else:
-                if 'huggingface' in data_path.lower():
-                        dataset = load_dataset(data_path, split="train", name="sample-10BT", streaming=False)
-                elif os.path.exists(data_path):
-                        dataset = load_from_disk(data_path)
-                        print (dataset[0])
-                else:
-                        print ("no dataset found")
+	data_path = data_args.dataset_path
+	if 'cots' in data_path:
+		dataset = load_dataset(data_path, "solutions_decontaminated", split="train", columns=["messages"])
+		# python_dataset = load_dataset(data_path, "solutions_py_decontaminated", split="train")
+		# dataset = concatenate_datasets((dataset, python_dataset))
+	else:
+		if 'huggingface' in data_path.lower():
+			dataset = load_dataset(data_path, split="train", name="sample-10BT", streaming=False)
+		elif os.path.exists(data_path):
+			dataset = load_from_disk(data_path)
+			print (dataset[0])
+		else:
+			print ("no dataset found")
 
-        print ('dataset loaded')
+	print ('dataset loaded')
 
-        block_text = len(dataset) == 1
-        print (f"Block text: {block_text}")
-        if block_text:
-                data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
-                train_data = tokenize_input(dataset, tokenizer, tile_size=data_args.max_seq_len)
-                dataset_split = int(len(train_data) * 0.8)
-                train_data, test_data = train_data[:dataset_split], train_data[dataset_split:]
-                train_text, test_text = detokenize_input(train_data, tokenizer), detokenize_input(test_data, tokenizer)
+	block_text = len(dataset) == 1
+	print (f"Block text: {block_text}")
+	if block_text:
+		data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
+		train_data = tokenize_input(dataset, tokenizer, tile_size=data_args.max_seq_len)
+		dataset_split = int(len(train_data) * 0.8)
+		train_data, test_data = train_data[:dataset_split], train_data[dataset_split:]
+		train_text, test_text = detokenize_input(train_data, tokenizer), detokenize_input(test_data, tokenizer)
 
-                # for sft trainer
-                train_text = {'text': list(train_text)}
-                test_text = {'text': list(test_text)}
+		# for sft trainer
+		train_text = {'text': list(train_text)}
+		test_text = {'text': list(test_text)}
 
-        else:
-                mock = [
-                        {"role": "user", "content":"@|@"},
-                        {"role": "assistant", "content":"@|@"},
-                ]
-                instruction_template = tokenizer.decode(tokenizer.apply_chat_template(mock)).split("@|@")[0]            
-                response_template = tokenizer.decode(tokenizer.apply_chat_template(mock)).split("@|@")[1]
-                print (f"Input template: {instruction_template}Response template: {response_template}")
-                data_collator = DataCollatorForCompletionOnlyLM(
-                        instruction_template=instruction_template,
-                        response_template=response_template,
-                        tokenizer=tokenizer, 
-                        mlm=False
-                )
-                if 'bird' in str(data_path):
-                        train_text = dataset
-                        test_text = load_from_disk('/home/bbadger/experiments/bird_dev_dataset')
-                else:
-                        split_index=200
-                        train_text, test_text = dataset.skip(split_index), dataset.take(split_index)
+	else:
+		mock = [
+			{"role": "user", "content":"@|@"},
+			{"role": "assistant", "content":"@|@"},
+		]
+		instruction_template = tokenizer.decode(tokenizer.apply_chat_template(mock)).split("@|@")[0]		
+		response_template = tokenizer.decode(tokenizer.apply_chat_template(mock)).split("@|@")[1]
+		print (f"Input template: {instruction_template}Response template: {response_template}")
+		data_collator = DataCollatorForCompletionOnlyLM(
+			instruction_template=instruction_template,
+			response_template=response_template,
+			tokenizer=tokenizer, 
+			mlm=False
+		)
+		if 'bird' in str(data_path):
+			train_text = dataset
+			test_text = load_from_disk('/home/bbadger/experiments/bird_dev_dataset')
+		else:
+			split_index=200
+			train_text, test_text = dataset.skip(split_index), dataset.take(split_index)
 
-        #todo: 8-bit optims fail to send params from cpu during the backward, see if this can be debugged
-        training_args.max_length = data_args.max_seq_length
-        training_args.max_seq_length = data_args.max_seq_length
-        training_args.optim = "adamw_torch"
-        #training_args.optim = "paged_adamw_8bit"
-        config = SFTConfig(
-                max_length = data_args.max_seq_length,
-                max_seq_length = data_args.max_seq_length,      
-        )
+	#todo: 8-bit optims fail to send params from cpu during the backward, see if this can be debugged
+	training_args.max_length = data_args.max_seq_length
+	training_args.max_seq_length = data_args.max_seq_length
+	training_args.optim = "adamw_torch"	
+	config = SFTConfig(
+		**training_args.to_dict(),
+		max_length = data_args.max_seq_length,
+		max_seq_length = data_args.max_seq_length,	
+	)
 
-        # add training_args to SFTConfig        
-        for key in training_args.__dict__.keys():
-                if key in config.__dict__.keys():
-                        config.__dict__[key] = training_args.__dict__[key]
-        
-        trainer = SFTTrainer(
-                model=model,
-                args=config,
-                train_dataset=train_text,
-                eval_dataset=test_text,
-                peft_config=peft_config,
-                data_collator=transformers.DataCollatorForLanguageModeling(tokenizer, mlm=False)
-        )
-        trainer.accelerator.print(f"{trainer.model}")
-        trainer.model.print_trainable_parameters()
+	# add training_args to SFTConfig if not sending training args to dict
+	# for key in training_args.__dict__.keys():
+	# 	if key in config.__dict__.keys():
+	# 		config.__dict__[key] = training_args.__dict__[key]
 
-        # saving final model
-#       if trainer.is_fsdp_enabled:
-#           trainer.accelerator.state.fsdp_plugin.set_state_dict_type("FULL_STATE_DICT")
+	trainer = SFTTrainer(
+		model=model,
+		args=config,
+		train_dataset=train_text,
+		eval_dataset=test_text,
+		peft_config=peft_config,
+		data_collator=transformers.DataCollatorForLanguageModeling(tokenizer, mlm=False)
+	)
+	trainer.accelerator.print(f"{trainer.model}")
+	trainer.model.print_trainable_parameters()
 
-        checkpoint=None
-        if training_args.resume_from_checkpoint:
-                checkpoint = training_args.resume_from_checkpoint
-                print (f'Training initialized from checkpoint {checkpoint}')
+	# saving final model
+#	if trainer.is_fsdp_enabled:
+#	    trainer.accelerator.state.fsdp_plugin.set_state_dict_type("FULL_STATE_DICT")
 
-        trainer.train(resume_from_checkpoint=checkpoint)
-        
-        if trainer.is_fsdp_enabled:
-                trainer.accelerator.state.fsdp_plugin.set_state_dict_type("FULL_STATE_DICT")
+	checkpoint=None
+	if training_args.resume_from_checkpoint:
+		checkpoint = training_args.resume_from_checkpoint
+		print (f'Training initialized from checkpoint {checkpoint}')
 
-        trainer.save_model()
+	trainer.train(resume_from_checkpoint=checkpoint)
+	
+	if trainer.is_fsdp_enabled:
+		trainer.accelerator.state.fsdp_plugin.set_state_dict_type("FULL_STATE_DICT")
+
+	trainer.save_model()
 
 
 if __name__ == "__main__":
