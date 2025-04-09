@@ -3,6 +3,8 @@ import torch
 import re
 from trl import GRPOConfig, GRPOTrainer
 from datasets import load_dataset, Dataset
+import sqlite3
+
 # Load and prep dataset
 SYSTEM_PROMPT = """
 Respond in the following format:
@@ -71,6 +73,27 @@ def get_gsm8k_questions(split = "train") -> Dataset:
 
 dataset = get_gsm8k_questions()
 
+def bird_check(predicted_sql,ground_truth, db_path):
+    """
+    Check the output for execution accuracy.
+    Args:
+        output (str): The generated SQL query.
+        gold_sql (str): The ground truth SQL query.
+    Returns:
+        bool: True if the output is correct, False otherwise.
+    """
+    conn = sqlite3.connect(db_path)
+    # Connect to the database
+    cursor = conn.cursor()
+    cursor.execute(predicted_sql)
+    predicted_res = cursor.fetchall()
+    cursor.execute(ground_truth)
+    ground_truth_res = cursor.fetchall()
+    res = 0
+    if set(predicted_res) == set(ground_truth_res):
+        res = 1
+    return res
+
 # Reward functions
 def correctness_reward_func(prompts, completions, answer, **kwargs) -> list[float]:
     responses = [completion[0]['content'] for completion in completions]
@@ -83,6 +106,25 @@ def int_reward_func(completions, **kwargs) -> list[float]:
     responses = [completion[0]['content'] for completion in completions]
     extracted_responses = [extract_xml_answer(r) for r in responses]
     return [0.5 if r.isdigit() else 0.0 for r in extracted_responses]
+
+def execution_reward_func(prompts, completions, cot=True, **kwargs):
+    responses = [completion[0]['content'] for completion in completions]
+    outputs = []
+    for response in responses:
+        if cot:
+            output = extract_xml_answer(response)
+        else:
+            output = response
+        outputs.append(output)
+
+    gold_sqls = [sql for sql in prompts[1]['content']]
+    databases = [db for db in prompts['database']]
+
+    checks = []
+    for output, gold, db in zip(outputs, gold_sqls, databases):
+        check = bird_check(output, gold, db)
+        checks.append(check)
+    return [1.0 if completion_check else 0.0 for completion_check in checks]
 
 def strict_format_reward_func(completions, **kwargs) -> list[float]:
     """Reward function that checks if the completion has a specific format."""
@@ -149,12 +191,11 @@ trainer = GRPOTrainer(
     model = model,
     processing_class = tokenizer,
     reward_funcs = [
-        # xmlcount_reward_func,
-        # soft_format_reward_func,
-        # strict_format_reward_func,
-        # int_reward_func,
-        length_reward
-        # correctness_reward_func,
+        xmlcount_reward_func,
+        soft_format_reward_func,
+        strict_format_reward_func,
+        int_reward_func,
+        correctness_reward_func,
     ],
     args = training_args,
     train_dataset = dataset,
