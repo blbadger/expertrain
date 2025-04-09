@@ -30,6 +30,7 @@ lora_rank = 32 # Larger rank = smarter, but slower
 
 model, tokenizer = FastLanguageModel.from_pretrained(
     model_name = "meta-llama/meta-Llama-3.1-8B-Instruct",
+    #model_name = "unsloth/Llama-3.2-3B-Instruct",
     max_seq_length = max_seq_length,
     load_in_4bit = True, # False for LoRA 16bit
     fast_inference = True, # Enable vLLM fast inference
@@ -115,16 +116,27 @@ def bird_check(predicted_sql, ground_truth, db_path):
     conn = sqlite3.connect(full_db_path)
     # Connect to the database
     cursor = conn.cursor()
-    try:
-        cursor.execute(predicted_sql)
-        predicted_res = cursor.fetchall()
-    except Exception:
-        return 0 # malformed sql
+    cursor.execute(predicted_sql)
+    predicted_res = cursor.fetchall()
     cursor.execute(ground_truth)
     ground_truth_res = cursor.fetchall()
     res = 0
     if set(predicted_res) == set(ground_truth_res):
         res = 1
+    return res
+
+def meta_bird_check(predicted_sql, ground_truth, db_path, meta_time_out=30.0):
+    try:
+        res = func_timeout(meta_time_out, bird_check,
+                                  args=(predicted_sql, ground_truth, db_path))
+    except KeyboardInterrupt:
+        sys.exit(0)
+    except FunctionTimedOut:
+        result = [(f'timeout',)]
+        res = 0 
+    except Exception as e:
+        result = [(f'error',)]  # possibly len(query) > 512 or not executable
+        res = 0 
     return res
 
 # Reward functions
@@ -155,7 +167,7 @@ def execution_reward_func(prompts, completions, answer, database, cot=True, **kw
 
     checks = []
     for output, gold, db in zip(outputs, gold_sqls, databases):
-        check = bird_check(output, gold, db)
+        check = meta_bird_check(output, gold, db)
         checks.append(check)
     return [1.0 if completion_check else 0.0 for completion_check in checks]
 
@@ -196,7 +208,7 @@ def xmlcount_reward_func(completions, **kwargs) -> list[float]:
     contents = [completion[0]["content"] for completion in completions]
     return [count_xml(c) for c in contents]
 
-max_prompt_length = 1900
+max_prompt_length = 1850
 
 training_args = GRPOConfig(
     learning_rate = 5e-6,
@@ -216,7 +228,7 @@ training_args = GRPOConfig(
     save_steps = 500,
     max_grad_norm = 0.1,
     report_to = "none", # Can use Weights & Biases
-    output_dir = "outputs",
+    output_dir = "/home/bbadger/experiments/llama-3.1-8b-grpo-bird",
 )
 
 trainer = GRPOTrainer(
