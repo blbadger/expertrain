@@ -4,6 +4,8 @@ import re
 from trl import GRPOConfig, GRPOTrainer
 from datasets import load_dataset, load_from_disk, Dataset
 import sqlite3
+from func_timeout import func_timeout, FunctionTimedOut
+
 
 # Load and prep dataset
 SYSTEM_PROMPT = """
