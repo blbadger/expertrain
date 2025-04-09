@@ -3,6 +3,8 @@ import sys
 from dataclasses import dataclass, field
 from typing import Optional
 import unsloth
+from unsloth.chat_templates import get_chat_template
+from unsloth import FastLanguageModel
 import transformers
 import trl
 import torch
@@ -88,7 +90,7 @@ class DataTrainingArguments:
 		default="train,test"
 		)
 
-QWEN_PROMPT = '''<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n<|im_start|>user\n{}<|im_end|>\n<|im_start|>assistant\n{}'''
+QWEN_PROMPT = '''<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n<|im_start|>user\n{}<|im_end|>\n<|im_start|>assistant\n{}<|im_end|>\n'''
 LLAMA_PROMPT = '''             
 <|begin_of_text|><|start_header_id|>system<|end_header_id|>
         
@@ -103,7 +105,7 @@ You are a helpful assistant<|eot_id|><|start_header_id|>user<|end_header_id|>
 def formatting_func(sample):
 	output_texts = []
 	#print ('Sample ', sample['messages'])
-	if len(sample['messages']) > 2:
+	if isinstance(sample['messages'][0], list):
 		for i in range(len(sample['messages'])):
 			input_text, output_text = sample['messages'][i][0]['content'], sample['messages'][i][1]['content']
 			text = QWEN_PROMPT.format(input_text, output_text)
@@ -113,6 +115,19 @@ def formatting_func(sample):
 		text = QWEN_PROMPT.format(input_text, output_text)
 		output_texts.append(text)
 	return output_texts
+
+def qwen_formatting_func(examples):
+    model, tokenizer = FastLanguageModel.from_pretrained(
+    	model_name = "unsloth/Qwen2.5-Coder-14B-Instruct") 
+    tokenizer = get_chat_template(
+    tokenizer,
+    chat_template = "qwen-2.5",
+    )
+
+    convos = examples["messages"]
+    output_texts = [tokenizer.apply_chat_template(convo, tokenize = False, add_generation_prompt = False) for convo in convos]
+    return output_texts
+
 
 def main(model_args, data_args, training_args):
 	set_seed(training_args.seed)
@@ -162,6 +177,8 @@ def main(model_args, data_args, training_args):
 		)
 		if 'bird' in str(data_path):
 			train_text = dataset
+			#print (train_text[0], train_text[1])
+			#print ('\n\n', test_text[-2], test_text[-1])
 			test_text = load_from_disk('/home/bbadger/experiments/bird_dev_dataset_completion')
 		else:
 			split_index=200
@@ -190,7 +207,7 @@ def main(model_args, data_args, training_args):
 	    args = config,
 	    #data_collator = DataCollatorForCausalLM(tokenizer, mlm=False)  #data_collator,
 	    data_collator=data_collator,
-            formatting_func=formatting_func
+            formatting_func=qwen_formatting_func
 	)
 
 	# trainer.accelerator.print(f"{trainer.model}")

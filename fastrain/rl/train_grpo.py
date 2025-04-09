@@ -2,7 +2,7 @@ from unsloth import FastLanguageModel
 import torch
 import re
 from trl import GRPOConfig, GRPOTrainer
-from datasets import load_dataset, Dataset
+from datasets import load_dataset, load_from_disk, Dataset
 import sqlite3
 
 # Load and prep dataset
@@ -67,13 +67,41 @@ def get_gsm8k_questions(split = "train") -> Dataset:
             {'role': 'system', 'content': SYSTEM_PROMPT},
             {'role': 'user', 'content': x['question']}
         ],
-        'answer': extract_hash_answer(x['answer'])
+        'answer': extract_hash_answer(x['answer']),
+        'database': 'yes'
     }) # type: ignore
     return data # type: ignore
 
 dataset = get_gsm8k_questions()
+print (dataset[0])
 
-def bird_check(predicted_sql,ground_truth, db_path):
+def get_bird_dataset():
+    
+    train_dataset = load_from_disk('/home/bbadger/Desktop/birds/bird/llm/data/train_dataset_non-prefilled')
+    train_dataset = train_dataset.map(lambda x: {
+         'prompt': [
+             {'role': 'user', 'content': x['messages'][0]['content']},
+          ],
+          'answer': x['messages'][1]['content'],
+          'database': x['databases']
+    }, remove_columns=['messages'])
+    eval_dataset = load_from_disk('/home/bbadger/Desktop/birds/bird/llm/data/dev_dataset_non-prefilled')
+    eval_dataset = eval_dataset.map(lambda x: {
+         'prompt': [
+             {'role': 'user', 'content': x['messages'][0]['content']},
+          ],  
+          'answer': x['messages'][1]['content'],
+          'database': x['databases']
+    }, remove_columns=['messages'])  
+    train_dataset = train_dataset.filter(lambda x: len(tokenizer.encode(x['prompt'][0]['content'])) < max_seq_length)
+    return train_dataset, eval_dataset
+
+train_dataset, eval_dataset = get_bird_dataset()
+print (train_dataset[0])
+print (len(train_dataset))
+model_path=''
+
+def bird_check(predicted_sql, ground_truth, db_path):
     """
     Check the output for execution accuracy.
     Args:
@@ -82,11 +110,16 @@ def bird_check(predicted_sql,ground_truth, db_path):
     Returns:
         bool: True if the output is correct, False otherwise.
     """
-    conn = sqlite3.connect(db_path)
+    full_db_path = '/home/bbadger/Desktop/birds/bird/llm/data/train_databases' + '/' + f'{db_path}/{db_path}.sqlite'
+    #print (full_db_path, predicted_sql, ground_truth)
+    conn = sqlite3.connect(full_db_path)
     # Connect to the database
     cursor = conn.cursor()
-    cursor.execute(predicted_sql)
-    predicted_res = cursor.fetchall()
+    try:
+        cursor.execute(predicted_sql)
+        predicted_res = cursor.fetchall()
+    except Exception:
+        return 0 # malformed sql
     cursor.execute(ground_truth)
     ground_truth_res = cursor.fetchall()
     res = 0
@@ -95,7 +128,7 @@ def bird_check(predicted_sql,ground_truth, db_path):
     return res
 
 # Reward functions
-def correctness_reward_func(prompts, completions, answer, **kwargs) -> list[float]:
+def correctness_reward_func(prompts, completions, answer, database, **kwargs) -> list[float]:
     responses = [completion[0]['content'] for completion in completions]
     q = prompts[0][-1]['content']
     extracted_responses = [extract_xml_answer(r) for r in responses]
@@ -107,7 +140,7 @@ def int_reward_func(completions, **kwargs) -> list[float]:
     extracted_responses = [extract_xml_answer(r) for r in responses]
     return [0.5 if r.isdigit() else 0.0 for r in extracted_responses]
 
-def execution_reward_func(prompts, completions, cot=True, **kwargs):
+def execution_reward_func(prompts, completions, answer, database, cot=True, **kwargs):
     responses = [completion[0]['content'] for completion in completions]
     outputs = []
     for response in responses:
@@ -117,8 +150,8 @@ def execution_reward_func(prompts, completions, cot=True, **kwargs):
             output = response
         outputs.append(output)
 
-    gold_sqls = [sql for sql in prompts[1]['content']]
-    databases = [db for db in prompts['database']]
+    gold_sqls = [sql for sql in answer]
+    databases = [db for db in database]
 
     checks = []
     for output, gold, db in zip(outputs, gold_sqls, databases):
@@ -163,7 +196,7 @@ def xmlcount_reward_func(completions, **kwargs) -> list[float]:
     contents = [completion[0]["content"] for completion in completions]
     return [count_xml(c) for c in contents]
 
-max_prompt_length = 256
+max_prompt_length = 1900
 
 training_args = GRPOConfig(
     learning_rate = 5e-6,
@@ -175,12 +208,11 @@ training_args = GRPOConfig(
     optim = "paged_adamw_8bit",
     logging_steps = 1,
     per_device_train_batch_size = 1,
-    gradient_accumulation_steps = 1, # Increase to 4 for smoother training
+    gradient_accumulation_steps = 2, # Increase to 4 for smoother training
     num_generations = 4, # Decrease if out of memory
     max_prompt_length = max_prompt_length,
     max_completion_length = max_seq_length - max_prompt_length,
-    # num_train_epochs = 1, # Set to 1 for a full training run
-    max_steps = 500,
+    num_train_epochs = 1, # Set to 1 for a full training run
     save_steps = 500,
     max_grad_norm = 0.1,
     report_to = "none", # Can use Weights & Biases
@@ -191,13 +223,14 @@ trainer = GRPOTrainer(
     model = model,
     processing_class = tokenizer,
     reward_funcs = [
-        xmlcount_reward_func,
-        soft_format_reward_func,
-        strict_format_reward_func,
-        int_reward_func,
-        correctness_reward_func,
+        #xmlcount_reward_func,
+        #soft_format_reward_func,
+        #strict_format_reward_func,
+        #int_reward_func,
+        execution_reward_func,
     ],
     args = training_args,
-    train_dataset = dataset,
+    train_dataset = train_dataset,
+   #eval_dataset = eval_dataset
 )
 trainer.train()

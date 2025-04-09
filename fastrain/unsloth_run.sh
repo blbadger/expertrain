@@ -10,7 +10,7 @@ python unsloth_train.py \
 --log_level "info" \
 --logging_strategy "steps" \
 --eval_strategy "steps" \
---eval_steps 100 \
+--eval_steps 50 \
 --save_strategy "steps" \
 --save_steps 200 \
 --bf16 False \
@@ -19,9 +19,9 @@ python unsloth_train.py \
 --learning_rate 4e-5 \
 --lr_scheduler_type "cosine" \
 --weight_decay 0.0 \
---warmup_ratio 0.0 \
+--warmup_ratio 0.2 \
 --max_grad_norm 1.0 \
---output_dir "/home/bbadger/experiments/bird_qwen_2.5_code_8192" \
+--output_dir "/home/bbadger/experiments/qwen-coderinstruct-bird-8192-lr4" \
 --per_device_train_batch_size 1 \
 --per_device_eval_batch_size 1 \
 --gradient_accumulation_steps 16 \
