@@ -63,22 +63,6 @@ def extract_hash_answer(text: str) -> str | None:
         return None
     return text.split("####")[1].strip()
 
-# uncomment middle messages for 1-shot prompting
-def get_gsm8k_questions(split = "train") -> Dataset:
-    data = load_dataset('openai/gsm8k', 'main')[split] # type: ignore
-    data = data.map(lambda x: { # type: ignore
-        'prompt': [
-            {'role': 'system', 'content': SYSTEM_PROMPT},
-            {'role': 'user', 'content': x['question']}
-        ],
-        'answer': extract_hash_answer(x['answer']),
-        'database': 'yes'
-    }) # type: ignore
-    return data # type: ignore
-
-dataset = get_gsm8k_questions()
-print (dataset[0])
-
 def get_bird_dataset():
     
     train_dataset = load_from_disk('/home/bbadger/Desktop/birds/bird/llm/data/train_dataset_non-prefilled')
@@ -106,7 +90,7 @@ print (train_dataset[0])
 print (len(train_dataset))
 model_path=''
 
-def bird_check(predicted_sql, ground_truth, db_path, mode='train'):
+def bird_check(predicted_sql, ground_truth, db_path, mode='dev'):
     """
     Check the output for execution accuracy.
     Args:
@@ -225,7 +209,7 @@ training_args = GRPOConfig(
     optim = "paged_adamw_8bit",
     logging_steps = 1,
     per_device_train_batch_size = 1,
-    gradient_accumulation_steps = 2, # Increase to 4 for smoother training
+    gradient_accumulation_steps = 1, # Increase to 4 for smoother training
     num_generations = 8, # Decrease if out of memory
     max_prompt_length = max_prompt_length,
     max_completion_length = max_seq_length - max_prompt_length,
@@ -234,7 +218,7 @@ training_args = GRPOConfig(
     max_grad_norm = 0.1, 
     report_to = "none", # Can use Weights & Biases
     output_dir = "/home/bbadger/experiments/qwen-2.5-7b-coderinstruct-grpo-bird",
-    beta = 0.04 # defaults to 0.04
+    beta = 0.001 # defaults to 0.04
     #loss_type = "dr_grpo" # defaults to bnpo
 )
 
@@ -249,7 +233,7 @@ trainer = GRPOTrainer(
         execution_reward_func,
     ],
     args = training_args,
-    train_dataset = train_dataset, ########train_dataset
+    train_dataset = eval_dataset, ########train_dataset
    #eval_dataset = eval_dataset
 )
 checkpoint = '/home/bbadger/experiments/qwen-2.5-7b-coderinstruct-grpo-bird/checkpoint-1500'
