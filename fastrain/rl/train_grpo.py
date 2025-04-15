@@ -5,7 +5,8 @@ from trl import GRPOConfig, GRPOTrainer
 from datasets import load_dataset, load_from_disk, Dataset
 import sqlite3
 from func_timeout import func_timeout, FunctionTimedOut
-
+import multiprocessing as mp
+import gc
 
 # Load and prep dataset
 SYSTEM_PROMPT = """
@@ -64,7 +65,6 @@ def extract_hash_answer(text: str) -> str | None:
     return text.split("####")[1].strip()
 
 def get_bird_dataset():
-    
     train_dataset = load_from_disk('/home/bbadger/Desktop/birds/bird/llm/data/train_dataset_non-prefilled')
     train_dataset = train_dataset.map(lambda x: {
          'prompt': [
@@ -90,44 +90,6 @@ print (train_dataset[0])
 print (len(train_dataset))
 model_path=''
 
-def bird_check(predicted_sql, ground_truth, db_path, mode='train'):
-    """
-    Check the output for execution accuracy.
-    Args:
-        output (str): The generated SQL query.
-        gold_sql (str): The ground truth SQL query.
-    Returns:
-        bool: True if the output is correct, False otherwise.
-    """
-    full_db_path = f'/home/bbadger/Desktop/birds/bird/llm/data/{mode}_databases' + '/' + f'{db_path}/{db_path}.sqlite'
-    #print (full_db_path, predicted_sql, ground_truth)
-    conn = sqlite3.connect(full_db_path)
-    # Connect to the database
-    cursor = conn.cursor()
-    cursor.execute(predicted_sql)
-    predicted_res = cursor.fetchall()
-    cursor.execute(ground_truth)
-    ground_truth_res = cursor.fetchall()
-    res = 0
-    if set(predicted_res) == set(ground_truth_res):
-        res = 1
-    del cursor, conn
-    return res
-
-def meta_bird_check(predicted_sql, ground_truth, db_path, meta_time_out=30.0):
-    try:
-        res = func_timeout(meta_time_out, bird_check,
-                                  args=(predicted_sql, ground_truth, db_path))
-    except KeyboardInterrupt:
-        sys.exit(0)
-    except FunctionTimedOut:
-        result = [(f'timeout',)]
-        res = 0 
-    except Exception as e:
-        result = [(f'error',)]  # possibly len(query) > 512 or not executable
-        res = 0 
-    return res
-
 # Reward functions
 def correctness_reward_func(prompts, completions, answer, database, **kwargs) -> list[float]:
     responses = [completion[0]['content'] for completion in completions]
@@ -141,6 +103,51 @@ def int_reward_func(completions, **kwargs) -> list[float]:
     extracted_responses = [extract_xml_answer(r) for r in responses]
     return [0.5 if r.isdigit() else 0.0 for r in extracted_responses]
 
+def bird_check(predicted_sql, ground_truth, db_path, mode='train'):
+    """
+    Check the output for execution accuracy.
+    Args:
+        output (str): The generated SQL query.
+        gold_sql (str): The ground truth SQL query.
+    Returns:
+        bool: True if the output is correct, False otherwise.
+    """
+    full_db_path = f'/home/bbadger/Desktop/birds/bird/llm/data/{mode}_databases' + '/' + f'{db_path}/{db_path}.sqlite'
+    conn = sqlite3.connect(full_db_path)
+    # Connect to the database
+    cursor = conn.cursor()
+    cursor.execute(predicted_sql)
+    predicted_res = cursor.fetchall()
+    cursor.execute(ground_truth)
+    ground_truth_res = cursor.fetchall()
+    res = 0
+    if set(predicted_res) == set(ground_truth_res):
+        res = 1
+    return res
+
+def meta_bird_check(predicted_sql, ground_truth, db_path, meta_time_out):
+    try:
+        res = func_timeout(meta_time_out, bird_check,
+                                  args=(predicted_sql, ground_truth, db_path))
+    except KeyboardInterrupt:
+        sys.exit(0)
+    except FunctionTimedOut:
+        result = [(f'timeout',)]
+        res = 0 
+    except Exception as e:
+        result = [(f'error',)]  # possibly len(query) > 512 or not executable
+        res = 0 
+    return res
+
+def run_sqls(predicted_sql, ground_truth, db_path, num_cpus=1, meta_time_out=30.0):
+    # note that this function only supports one CPU thread at a time for now. 
+    # TODO: support multithreading for faster eval (reformat result to arrray)
+    pool = mp.Pool(processes=num_cpus)
+    result = pool.apply_async(execute_model, args=(predicted_sql, ground_truth, db_path, meta_time_out))
+    pool.close()
+    pool.join()
+    return result
+
 def execution_reward_func(prompts, completions, answer, database, cot=True, **kwargs):
     responses = [completion[0]['content'] for completion in completions]
     outputs = []
@@ -153,12 +160,12 @@ def execution_reward_func(prompts, completions, answer, database, cot=True, **kw
 
     gold_sqls = [sql for sql in answer]
     databases = [db for db in database]
-
     checks = []
     for output, gold, db in zip(outputs, gold_sqls, databases):
-        check = meta_bird_check(output, gold, db)
+        check = run_sqls(output, gold, db)
         checks.append(check)
     return [1.0 if completion_check else 0.0 for completion_check in checks]
+
 
 def strict_format_reward_func(completions, **kwargs) -> list[float]:
     """Reward function that checks if the completion has a specific format."""

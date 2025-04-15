@@ -31,14 +31,14 @@ max_seq_length = 2048 # Can increase for longer reasoning traces
 lora_rank = 32 # Larger rank = smarter, but slower
 
 model, tokenizer = FastLanguageModel.from_pretrained(
-    #model_name = "/home/bbadger/experiments/qwen-coderinstruct-bird-8192/checkpoint-589/merged_model",
-    model_name = "meta-llama/meta-Llama-3.1-8B-Instruct",
+    model_name = "/home/bbadger/experiments/qwen-coderinstruct-bird-8192/checkpoint-589/merged_model",
+    # model_name = "meta-llama/meta-Llama-3.1-8B-Instruct",
     #model_name = "unsloth/Llama-3.2-3B-Instruct",
     max_seq_length = max_seq_length,
     load_in_4bit = True, # False for LoRA 16bit
     fast_inference = True, # Enable vLLM fast inference
     max_lora_rank = lora_rank,
-    torch_dtyp=torch.float16,
+    torch_dtype=torch.float16,
     gpu_memory_utilization = 0.55, # Reduce if out of memory
 )
 
@@ -101,7 +101,6 @@ def bird_check(predicted_sql, ground_truth, db_path, mode='train'):
         bool: True if the output is correct, False otherwise.
     """
     full_db_path = f'/home/bbadger/Desktop/birds/bird/llm/data/{mode}_databases' + '/' + f'{db_path}/{db_path}.sqlite'
-    #print (full_db_path, predicted_sql, ground_truth)
     conn = sqlite3.connect(full_db_path)
     # Connect to the database
     cursor = conn.cursor()
@@ -128,6 +127,15 @@ def meta_bird_check(predicted_sql, ground_truth, db_path, meta_time_out=30.0):
         result = [(f'error',)]  # possibly len(query) > 512 or not executable
         res = 0 
     return res
+
+def run_sqls(predicted_sql, ground_truth, db_path, num_cpus=1, meta_time_out=30.0):
+    # note that this function only supports one CPU thread at a time for now. 
+    # TODO: support multithreading for faster eval (reformat result to arrray)
+    pool = mp.Pool(processes=num_cpus)
+    result = pool.apply_async(execute_model, args=(predicted_sql, ground_truth, db_path, meta_time_out))
+    pool.close()
+    pool.join()
+    return result
 
 # Reward functions
 def correctness_reward_func(prompts, completions, answer, database, **kwargs) -> list[float]:
@@ -157,7 +165,7 @@ def execution_reward_func(prompts, completions, answer, database, cot=True, **kw
 
     checks = []
     for output, gold, db in zip(outputs, gold_sqls, databases):
-        check = meta_bird_check(output, gold, db)
+        check = run_sqls(output, gold, db)
         checks.append(check)
     return [1.0 if completion_check else 0.0 for completion_check in checks]
 
