@@ -7,6 +7,8 @@ import sqlite3
 from func_timeout import func_timeout, FunctionTimedOut
 import multiprocessing as mp
 import gc
+import os
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 # Load and prep dataset
 SYSTEM_PROMPT = """
@@ -144,6 +146,7 @@ def run_sqls(predicted_sql, ground_truth, db_path, num_cpus=1, meta_time_out=30.
     # TODO: support multithreading for faster eval (reformat result to arrray)
     pool = mp.Pool(processes=num_cpus)
     result = pool.apply_async(meta_bird_check, args=(predicted_sql, ground_truth, db_path, meta_time_out))
+    result = result.get()
     pool.close()
     pool.join()
     return result
@@ -244,6 +247,6 @@ trainer = GRPOTrainer(
     eval_dataset = eval_dataset
 )
 checkpoint = '/home/bbadger/experiments/qwen-2.5-7b-coderinstruct-grpo-bird/checkpoint-4227'
-trainer.train(checkpoint)
+trainer.train()
 print ('training completed')
 model.save_pretrained_merged('/home/bbadger/experiments/qwen-2.5-7b-coderinstruct-grpo-bird/merged_model', tokenizer, save_method = "merged_16bit",)

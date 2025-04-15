@@ -31,8 +31,8 @@ max_seq_length = 2048 # Can increase for longer reasoning traces
 lora_rank = 32 # Larger rank = smarter, but slower
 
 model, tokenizer = FastLanguageModel.from_pretrained(
-    model_name = "/home/bbadger/experiments/qwen-coderinstruct-bird-8192/checkpoint-589/merged_model",
-    # model_name = "meta-llama/meta-Llama-3.1-8B-Instruct",
+    #model_name = "/home/bbadger/experiments/qwen-coderinstruct-bird-8192/merged_model",
+    model_name = "meta-llama/meta-Llama-3.1-8B-Instruct",
     #model_name = "unsloth/Llama-3.2-3B-Instruct",
     max_seq_length = max_seq_length,
     load_in_4bit = True, # False for LoRA 16bit
@@ -133,6 +133,7 @@ def run_sqls(predicted_sql, ground_truth, db_path, num_cpus=1, meta_time_out=30.
     # TODO: support multithreading for faster eval (reformat result to arrray)
     pool = mp.Pool(processes=num_cpus)
     result = pool.apply_async(meta_bird_check, args=(predicted_sql, ground_truth, db_path, meta_time_out))
+    result = result.get()
     pool.close()
     pool.join()
     return result

@@ -32,4 +32,4 @@ python unsloth_train.py \
 --lora_alpha 32 \
 --lora_dropout 0. \
 --report_to "none" \
-# --resume_from_checkpoint "/home/bbadger/experiments/llama3.2-3b-bird-lora/checkpoint-2000"
+--resume_from_checkpoint "/home/bbadger/experiments/qwen-coderinstruct-bird-8192/checkpoint-589"

@@ -235,6 +235,7 @@ def main(model_args, data_args, training_args):
 		trainer.accelerator.state.fsdp_plugin.set_state_dict_type("FULL_STATE_DICT")
 	
 	model.save_pretrained_merged(training_args.output_dir + '/merged_model', tokenizer, save_method = "merged_16bit",)
+	model.save_pretrained_merged(training_args.output_dir + '/merged_model_4bit', tokenizer, save_method = "merged_4bit",)
 	print (f"Model saved to {training_args.output_dir + '/merged_model'}")
 	#trainer.save_model()
 
