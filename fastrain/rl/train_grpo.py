@@ -247,6 +247,6 @@ trainer = GRPOTrainer(
     eval_dataset = eval_dataset
 )
 checkpoint = '/home/bbadger/experiments/qwen-2.5-7b-coderinstruct-grpo-bird/checkpoint-4227'
-trainer.train()
+trainer.train(checkpoint)
 print ('training completed')
 model.save_pretrained_merged('/home/bbadger/experiments/qwen-2.5-7b-coderinstruct-grpo-bird/merged_model', tokenizer, save_method = "merged_16bit",)

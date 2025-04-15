@@ -5,7 +5,10 @@ from trl import GRPOConfig, GRPOTrainer
 from datasets import load_dataset, load_from_disk, Dataset
 import sqlite3
 from func_timeout import func_timeout, FunctionTimedOut
-
+import multiprocessing as mp
+import gc
+import os
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 # Load and prep dataset
 SYSTEM_PROMPT = """
@@ -31,8 +34,8 @@ max_seq_length = 2048 # Can increase for longer reasoning traces
 lora_rank = 32 # Larger rank = smarter, but slower
 
 model, tokenizer = FastLanguageModel.from_pretrained(
-    #model_name = "/home/bbadger/experiments/qwen-coderinstruct-bird-8192/merged_model",
-    model_name = "meta-llama/meta-Llama-3.1-8B-Instruct",
+    model_name = "/home/bbadger/experiments/qwen-coderinstruct-bird-8192/checkpoint-589",
+    #model_name = "meta-llama/meta-Llama-3.1-8B-Instruct",
     #model_name = "unsloth/Llama-3.2-3B-Instruct",
     max_seq_length = max_seq_length,
     load_in_4bit = True, # False for LoRA 16bit
@@ -42,17 +45,19 @@ model, tokenizer = FastLanguageModel.from_pretrained(
     gpu_memory_utilization = 0.55, # Reduce if out of memory
 )
 
-model = FastLanguageModel.get_peft_model(
-    model,
-    r = lora_rank, # Choose any number > 0 ! Suggested 8, 16, 32, 64, 128
-    target_modules = [
-        "q_proj", "k_proj", "v_proj", "o_proj",
-        "gate_proj", "up_proj", "down_proj",
-    ], # Remove QKVO if out of memory
-    lora_alpha = lora_rank,
-    use_gradient_checkpointing = "unsloth", # Enable long context finetuning
-    random_state = 3407,
-)
+#model = FastLanguageModel.get_peft_model(
+#    model,
+#    r = lora_rank, # Choose any number > 0 ! Suggested 8, 16, 32, 64, 128
+#    target_modules = [
+#        "q_proj", "k_proj", "v_proj", "o_proj",
+#        "gate_proj", "up_proj", "down_proj",
+#    ], # Remove QKVO if out of memory
+#    lora_alpha = lora_rank,
+#    use_gradient_checkpointing = "unsloth", # Enable long context finetuning
+#    random_state = 3407,
+#)
+
+print (model)
 
 def extract_xml_answer(text: str) -> str:
     answer = text.split("<answer>")[-1]
@@ -247,7 +252,7 @@ trainer = GRPOTrainer(
     train_dataset = train_dataset,
     eval_dataset = eval_dataset
 )
-checkpoint = '/home/bbadger/experiments/qwen-2.5-7b-coderinstruct-grpo-bird/checkpoint-4227'
+checkpoint = '/home/bbadger/experiments/qwen-coderinstruct-bird-8192/checkpoint-589'
 trainer.train()
 print ('training completed')
 model.save_pretrained_merged('/home/bbadger/experiments/qwen-2.5-7b-coderinstruct-grpo-bird/merged_model', tokenizer, save_method = "merged_16bit",)
