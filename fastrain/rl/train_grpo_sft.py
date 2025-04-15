@@ -31,13 +31,14 @@ max_seq_length = 2048 # Can increase for longer reasoning traces
 lora_rank = 32 # Larger rank = smarter, but slower
 
 model, tokenizer = FastLanguageModel.from_pretrained(
-    model_name = "unsloth/Qwen2.5-Coder-7B-Instruct",
-    #model_name = "meta-llama/meta-Llama-3.1-8B-Instruct",
+    #model_name = "/home/bbadger/experiments/qwen-coderinstruct-bird-8192/checkpoint-589/merged_model",
+    model_name = "meta-llama/meta-Llama-3.1-8B-Instruct",
     #model_name = "unsloth/Llama-3.2-3B-Instruct",
     max_seq_length = max_seq_length,
     load_in_4bit = True, # False for LoRA 16bit
     fast_inference = True, # Enable vLLM fast inference
     max_lora_rank = lora_rank,
+    torch_dtyp=torch.float16,
     gpu_memory_utilization = 0.55, # Reduce if out of memory
 )
 
@@ -217,11 +218,12 @@ training_args = GRPOConfig(
     save_steps = 200,
     max_grad_norm = 0.1, 
     report_to = "none", # Can use Weights & Biases
-    output_dir = "/home/bbadger/experiments/qwen-2.5-7b-coderinstruct-grpo-bird",
+    output_dir = "/home/bbadger/experiments/qwen-2.5-7b-coderinstruct-grpo-sftbird",
     beta = 0.04 # defaults to 0.04
     #loss_type = "dr_grpo" # defaults to bnpo
 )
 
+print (training_args)
 trainer = GRPOTrainer(
     model = model,
     processing_class = tokenizer,
@@ -237,6 +239,6 @@ trainer = GRPOTrainer(
     eval_dataset = eval_dataset
 )
 checkpoint = '/home/bbadger/experiments/qwen-2.5-7b-coderinstruct-grpo-bird/checkpoint-4227'
-trainer.train(checkpoint)
+trainer.train()
 print ('training completed')
 model.save_pretrained_merged('/home/bbadger/experiments/qwen-2.5-7b-coderinstruct-grpo-bird/merged_model', tokenizer, save_method = "merged_16bit",)

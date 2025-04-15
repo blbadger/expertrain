@@ -90,7 +90,14 @@ class DataTrainingArguments:
 		default="train,test"
 		)
 
-QWEN_PROMPT = '''<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n<|im_start|>user\n{}<|im_end|>\n<|im_start|>assistant\n{}<|im_end|>\n'''
+QWEN_PROMPT = '''<|im_start|>system
+You are a helpful assistant.<|im_end|>
+<|im_start|>user
+{}<|im_end|>
+<|im_start|>assistant
+{}<|im_end|>
+'''
+
 LLAMA_PROMPT = '''             
 <|begin_of_text|><|start_header_id|>system<|end_header_id|>
         
@@ -207,7 +214,7 @@ def main(model_args, data_args, training_args):
 	    args = config,
 	    #data_collator = DataCollatorForCausalLM(tokenizer, mlm=False)  #data_collator,
 	    data_collator=data_collator,
-            formatting_func=qwen_formatting_func
+            formatting_func=formatting_func
 	)
 
 	# trainer.accelerator.print(f"{trainer.model}")

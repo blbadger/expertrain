@@ -1,9 +1,9 @@
 python merge_adapters.py \
---model_name_or_path "meta-llama/Llama-3.1-8B-Instruct" \
---lora_weights_path "/home/bbadger/experiments/llama3.1-8b-bird-unsloth/checkpoint-1000" \
+--model_name_or_path "unsloth/Qwen2.5-Coder-7B-Instruct" \
+--lora_weights_path "/home/bbadger/experiments/qwen-coderinstruct-bird-8192/checkpoint-589" \
 --use_peft_lora True \
---lora_r 64 \
---lora_alpha 64 \
+--lora_r 32 \
+--lora_alpha 32 \
 --lora_dropout 0. \
 --lora_target_modules "all-linear" \
 --use_4bit_quantization False \
