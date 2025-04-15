@@ -132,7 +132,7 @@ def run_sqls(predicted_sql, ground_truth, db_path, num_cpus=1, meta_time_out=30.
     # note that this function only supports one CPU thread at a time for now. 
     # TODO: support multithreading for faster eval (reformat result to arrray)
     pool = mp.Pool(processes=num_cpus)
-    result = pool.apply_async(execute_model, args=(predicted_sql, ground_truth, db_path, meta_time_out))
+    result = pool.apply_async(meta_bird_check, args=(predicted_sql, ground_truth, db_path, meta_time_out))
     pool.close()
     pool.join()
     return result
