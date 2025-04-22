@@ -10,7 +10,7 @@ import gc
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-# Load and prep dataset
+# the COT prompt is usually added to the dataset as a pre-processing step
 SYSTEM_PROMPT = """
 Respond in the following format:
 <reasoning>
@@ -46,11 +46,11 @@ model, tokenizer = FastLanguageModel.from_pretrained(
 
 model = FastLanguageModel.get_peft_model(
     model,
-    r = lora_rank, # Choose any number > 0 ! Suggested 8, 16, 32, 64, 128
+    r = lora_rank,
     target_modules = [
         "q_proj", "k_proj", "v_proj", "o_proj",
         "gate_proj", "up_proj", "down_proj",
-    ], # Remove QKVO if out of memory
+    ],
     lora_alpha = lora_rank,
     use_gradient_checkpointing = "unsloth", # Enable long context finetuning
     random_state = 3407,
@@ -58,16 +58,18 @@ model = FastLanguageModel.get_peft_model(
 
 def extract_xml_answer(text: str) -> str:
     answer = text.split("<answer>")[-1]
-    answer = answer.split("</answer>")[0]
+    answer = answer.split("</answer>")[0] # typically </answer> is omitted
     return answer.strip()
 
 def extract_hash_answer(text: str) -> str | None:
-    if "####" not in text:
+    if "###" not in text:
         return None
-    return text.split("####")[1].strip()
+    return text.split("###")[1].strip()
 
-def get_bird_dataset():
-    train_dataset = load_from_disk('/home/bbadger/Desktop/birds/bird/llm/data/train_dataset_non-prefilled')
+def get_bird_dataset(cot=False):
+    data_path = ('/home/bbadger/Desktop/birds/bird/llm/data/{}_dataset_non-prefilled' + ('_cot' if cot else ''))
+
+    train_dataset = load_from_disk(data_path.format('train'))
     train_dataset = train_dataset.map(lambda x: {
          'prompt': [
              {'role': 'user', 'content': x['messages'][0]['content']},
@@ -75,7 +77,8 @@ def get_bird_dataset():
           'answer': x['messages'][1]['content'],
           'database': x['databases']
     }, remove_columns=['messages'])
-    eval_dataset = load_from_disk('/home/bbadger/Desktop/birds/bird/llm/data/dev_dataset_non-prefilled')
+
+    eval_dataset = load_from_disk(data_path.format('dev'))
     eval_dataset = eval_dataset.map(lambda x: {
          'prompt': [
              {'role': 'user', 'content': x['messages'][0]['content']},
@@ -87,23 +90,6 @@ def get_bird_dataset():
     eval_dataset = eval_dataset.filter(lambda x: len(tokenizer.encode(x['prompt'][0]['content'])) < max_seq_length)
     return train_dataset, eval_dataset
 
-train_dataset, eval_dataset = get_bird_dataset()
-print (train_dataset[0])
-print (len(train_dataset))
-model_path=''
-
-# Reward functions
-def correctness_reward_func(prompts, completions, answer, database, **kwargs) -> list[float]:
-    responses = [completion[0]['content'] for completion in completions]
-    q = prompts[0][-1]['content']
-    extracted_responses = [extract_xml_answer(r) for r in responses]
-    print('-'*20, f"Question:\n{q}", f"\nAnswer:\n{answer[0]}", f"\nResponse:\n{responses[0]}", f"\nExtracted:\n{extracted_responses[0]}")
-    return [2.0 if r == a else 0.0 for r, a in zip(extracted_responses, answer)]
-
-def int_reward_func(completions, **kwargs) -> list[float]:
-    responses = [completion[0]['content'] for completion in completions]
-    extracted_responses = [extract_xml_answer(r) for r in responses]
-    return [0.5 if r.isdigit() else 0.0 for r in extracted_responses]
 
 def bird_check(predicted_sql, ground_truth, db_path, mode='train'):
     """
@@ -169,7 +155,6 @@ def execution_reward_func(prompts, completions, answer, database, cot=True, **kw
         checks.append(check)
     return [1.0 if completion_check else 0.0 for completion_check in checks]
 
-
 def strict_format_reward_func(completions, **kwargs) -> list[float]:
     """Reward function that checks if the completion has a specific format."""
     pattern = r"^<reasoning>\n.*?\n</reasoning>\n<answer>\n.*?\n</answer>\n$"
@@ -183,11 +168,6 @@ def soft_format_reward_func(completions, **kwargs) -> list[float]:
     responses = [completion[0]["content"] for completion in completions]
     matches = [re.match(pattern, r) for r in responses]
     return [0.5 if match else 0.0 for match in matches]
-
-def length_reward(completions, **kwargs):
-    """Reward function for increased response length."""
-    responses = [completion[0]["content"] for completion in completions]
-    return [0.001*len(response) for response in responses]
 
 def count_xml(text) -> float:
     count = 0.0
@@ -236,17 +216,20 @@ trainer = GRPOTrainer(
     model = model,
     processing_class = tokenizer,
     reward_funcs = [
-        #xmlcount_reward_func,
-        #soft_format_reward_func,
-        #strict_format_reward_func,
-        #int_reward_func,
+        xmlcount_reward_func,
+        soft_format_reward_func,
+        strict_format_reward_func,
         execution_reward_func,
     ],
     args = training_args,
     train_dataset = train_dataset,
     eval_dataset = eval_dataset
 )
-checkpoint = '/home/bbadger/experiments/qwen-2.5-7b-coderinstruct-grpo-bird/checkpoint-4227'
-trainer.train()
-print ('training completed')
-model.save_pretrained_merged('/home/bbadger/experiments/qwen-2.5-7b-coderinstruct-grpo-bird/merged_model', tokenizer, save_method = "merged_16bit",)
+if __name__ == '__main__':
+    cot = True
+    train_dataset, eval_dataset = get_bird_dataset(cot=cot)
+    print (train_dataset[0])
+    print (len(train_dataset))
+    trainer.train()
+    print ('training completed')
+    model.save_pretrained_merged('/home/bbadger/experiments/qwen-2.5-7b-coderinstruct-grpo-bird/merged_model', tokenizer, save_method = "merged_16bit")
