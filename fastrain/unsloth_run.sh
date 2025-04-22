@@ -5,14 +5,14 @@ python unsloth_train.py \
 --add_special_tokens False \
 --append_concat_token False \
 --max_seq_length 8192 \
---num_train_epochs 1 \
+--num_train_epochs 7 \
 --logging_steps 20 \
 --log_level "info" \
 --logging_strategy "steps" \
 --eval_strategy "steps" \
---eval_steps 50 \
+--eval_steps 200 \
 --save_strategy "steps" \
---save_steps 200 \
+--save_steps 500 \
 --bf16 False \
 --fp16 True \
 --packing False \
@@ -32,4 +32,4 @@ python unsloth_train.py \
 --lora_alpha 32 \
 --lora_dropout 0. \
 --report_to "none" \
---resume_from_checkpoint "/home/bbadger/experiments/qwen-coderinstruct-bird-8192/checkpoint-589"
+--resume_from_checkpoint "/home/bbadger/experiments/qwen-coderinstruct-bird-8192/checkpoint-1767"

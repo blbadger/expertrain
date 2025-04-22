@@ -220,14 +220,14 @@ training_args = GRPOConfig(
     logging_steps = 1,
     per_device_train_batch_size = 1,
     gradient_accumulation_steps = 2, # Increase to 4 for smoother training
-    num_generations = 8, # Decrease if out of memory
+    num_generations = 16, # Decrease if out of memory
     max_prompt_length = max_prompt_length,
     max_completion_length = max_seq_length - max_prompt_length,
-    num_train_epochs = 2,
+    num_train_epochs = 1,
     save_steps = 200,
     max_grad_norm = 0.1, 
     report_to = "none", # Can use Weights & Biases
-    output_dir = "/home/bbadger/experiments/qwen-2.5-7b-coderinstruct-grpo-bird",
+    output_dir = "/home/bbadger/experiments/qwen-2.5-7b-coderinstruct-grpo-bird-b16",
     beta = 0.04 # defaults to 0.04
     #loss_type = "dr_grpo" # defaults to bnpo
 )
@@ -247,6 +247,6 @@ trainer = GRPOTrainer(
     eval_dataset = eval_dataset
 )
 checkpoint = '/home/bbadger/experiments/qwen-2.5-7b-coderinstruct-grpo-bird/checkpoint-4227'
-trainer.train(checkpoint)
+trainer.train()
 print ('training completed')
 model.save_pretrained_merged('/home/bbadger/experiments/qwen-2.5-7b-coderinstruct-grpo-bird/merged_model', tokenizer, save_method = "merged_16bit",)

@@ -2,5 +2,6 @@ expertrain-venv
 fastrain/rl/grpo_trainer_lora_model
 fastrain/rl/unsloth_compiled_cache
 fastrain/rl/outputs
+fastrain/rl/_unsloth_temporary_saved_buffers
 fastrain/unsloth_compiled_cache
 fastrain/_unsloth_temporary_saved_buffers

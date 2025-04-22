@@ -1,6 +1,6 @@
 python merge_adapters.py \
 --model_name_or_path "unsloth/Qwen2.5-Coder-7B-Instruct" \
---lora_weights_path "/home/bbadger/experiments/qwen-coderinstruct-bird-8192/checkpoint-589" \
+--lora_weights_path "/home/bbadger/experiments/qwen-coderinstruct-bird-8192/checkpoint-1200" \
 --use_peft_lora True \
 --lora_r 32 \
 --lora_alpha 32 \
