@@ -41,7 +41,7 @@ model, tokenizer = FastLanguageModel.from_pretrained(
     load_in_4bit = True, # False for LoRA 16bit
     fast_inference = True, # Enable vLLM fast inference
     max_lora_rank = lora_rank,
-    gpu_memory_utilization = 0.55, # Reduce if out of memory
+    gpu_memory_utilization = 0.5, # Reduce if out of memory
 )
 
 model = FastLanguageModel.get_peft_model(
@@ -193,9 +193,10 @@ if __name__ == '__main__':
     cot = True
     max_prompt_length = 1650
     train_dataset, eval_dataset = get_bird_dataset(cot=cot)
-        print (train_dataset[0])
-        print (len(train_dataset))
-        training_args = GRPOConfig(
+    print (train_dataset[0])
+
+    print (len(train_dataset))
+    training_args = GRPOConfig(
         learning_rate = 5e-6,
         adam_beta1 = 0.9,
         adam_beta2 = 0.99,
@@ -206,14 +207,14 @@ if __name__ == '__main__':
         logging_steps = 1,
         per_device_train_batch_size = 1,
         gradient_accumulation_steps = 2, # Increase to 4 for smoother training
-        num_generations = 16, # Decrease if out of memory
+        num_generations = 8, # Decrease if out of memory
         max_prompt_length = max_prompt_length,
         max_completion_length = max_seq_length - max_prompt_length,
         num_train_epochs = 1,
         save_steps = 200,
         max_grad_norm = 0.1, 
         report_to = "none", # Can use Weights & Biases
-        output_dir = "/home/bbadger/experiments/qwen-2.5-7b-coderinstruct-grpo-bird-b16",
+        output_dir = "/home/bbadger/experiments/qwen-2.5-7b-coderinstruct-grpo-cot",
         beta = 0.04 # defaults to 0.04
         #loss_type = "dr_grpo" # defaults to bnpo
     )
