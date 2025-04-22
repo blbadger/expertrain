@@ -30,7 +30,7 @@ XML_COT_FORMAT = """\
 </answer>
 """
 
-max_seq_length = 2048 # Can increase for longer reasoning traces
+max_seq_length = 1600 # Can increase for longer reasoning traces
 lora_rank = 32 # Larger rank = smarter, but slower
 
 model, tokenizer = FastLanguageModel.from_pretrained(
@@ -58,7 +58,7 @@ model = FastLanguageModel.get_peft_model(
 
 def extract_xml_answer(text: str) -> str:
     answer = text.split("<answer>")[-1]
-    answer = answer.split("</answer>")[0] # typically </answer> is omitted
+    answer = answer.split("</answer>")[0]
     return answer.strip()
 
 def extract_hash_answer(text: str) -> str | None:
@@ -143,6 +143,7 @@ def execution_reward_func(prompts, completions, answer, database, cot=True, **kw
     for response in responses:
         if cot:
             output = extract_xml_answer(response)
+            print (output)
         else:
             output = response
         outputs.append(output)
@@ -191,7 +192,7 @@ def xmlcount_reward_func(completions, **kwargs) -> list[float]:
 
 if __name__ == '__main__':
     cot = True
-    max_prompt_length = 1650
+    max_prompt_length = 1024
     train_dataset, eval_dataset = get_bird_dataset(cot=cot)
         print (train_dataset[0])
         print (len(train_dataset))
@@ -206,7 +207,7 @@ if __name__ == '__main__':
         logging_steps = 1,
         per_device_train_batch_size = 1,
         gradient_accumulation_steps = 2, # Increase to 4 for smoother training
-        num_generations = 16, # Decrease if out of memory
+        num_generations = 8, # Decrease if out of memory
         max_prompt_length = max_prompt_length,
         max_completion_length = max_seq_length - max_prompt_length,
         num_train_epochs = 1,
