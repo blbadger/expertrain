@@ -57,9 +57,14 @@ model = FastLanguageModel.get_peft_model(
 )
 
 def extract_xml_answer(text: str) -> str:
+    print (f"Full Output: {text}")
     answer = text.split("<answer>")[-1]
     answer = answer.split("</answer>")[0]
-    return answer.strip()
+    answer = answer.strip()
+    if '```sql' in answer:
+        answer = answer.split('```sql')[1].strip('`\n ')
+    print (f'Answer only: {answer}')
+    return answer
 
 def extract_hash_answer(text: str) -> str | None:
     if "###" not in text:
@@ -143,7 +148,7 @@ def execution_reward_func(prompts, completions, answer, database, cot=True, **kw
     for response in responses:
         if cot:
             output = extract_xml_answer(response)
-            print (output)
+            
         else:
             output = response
         outputs.append(output)
