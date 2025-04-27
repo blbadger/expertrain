@@ -166,7 +166,7 @@ def main(model_args, data_args, training_args):
 	)
 	if data_args.eval_dataset_path:
 		train_text = dataset
-		test_dataset = load_from_disk(data_args.eval_dataset_path)
+		test_text = load_from_disk(data_args.eval_dataset_path)
 	else:
 		split_index=200
 		train_text, test_text = dataset.skip(split_index), dataset.take(split_index)
