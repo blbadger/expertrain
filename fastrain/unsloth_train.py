@@ -127,8 +127,8 @@ def qwen_formatting_func(examples):
     model, tokenizer = FastLanguageModel.from_pretrained(
     	model_name = "unsloth/Qwen2.5-Coder-14B-Instruct") 
     tokenizer = get_chat_template(
-    tokenizer,
-    chat_template = "qwen-2.5",
+	    tokenizer,
+	    chat_template = "qwen-2.5",
     )
 
     convos = examples["messages"]
@@ -153,44 +153,25 @@ def main(model_args, data_args, training_args):
 		else:
 			print ("no dataset found")
 
-	print ('dataset loaded')
-
-	block_text = len(dataset) == 1
-	print (f"Block text: {block_text}")
-	if block_text:
-		data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
-		train_data = tokenize_input(dataset, tokenizer, tile_size=data_args.max_seq_len)
-		dataset_split = int(len(train_data) * 0.8)
-		train_data, test_data = train_data[:dataset_split], train_data[dataset_split:]
-		train_text, test_text = detokenize_input(train_data, tokenizer), detokenize_input(test_data, tokenizer)
-		# for sft trainer
-		train_text = {'text': list(train_text)}
-		test_text = {'text': list(test_text)}
-
+	response_template = '###'
+	print (f"Response template: {response_template}")
+	data_collator = DataCollatorForCompletionOnlyLM(
+		#instruction_template=instruction_template,
+		response_template=response_template,
+		tokenizer=tokenizer, 
+		mlm=False
+	)
+	if data_args.eval_dataset_path:
+		train_text = dataset
+		test_dataset = load_from_disk(data_args.eval_dataset_path)
 	else:
-		mock = [
-			{"role": "user", "content":"@|@"},
-			{"role": "assistant", "content":"@|@"},
-		]
-		#instruction_template = tokenizer.decode(tokenizer.apply_chat_template(mock)).split("@|@")[0]		
-		#response_template = tokenizer.decode(tokenizer.apply_chat_template(mock)).split("@|@")[1]
-		response_template = '###'
-		print (f"Response template: {response_template}")
-		data_collator = DataCollatorForCompletionOnlyLM(
-			#instruction_template=instruction_template,
-			response_template=response_template,
-			tokenizer=tokenizer, 
-			mlm=False
-		)
-		if 'bird' in str(data_path):
-			train_text = dataset
-			#print (train_text[0], train_text[1])
-			#print ('\n\n', test_text[-2], test_text[-1])
-			test_text = load_from_disk('/home/bbadger/Desktop/birds/bird/llm/data/dev_dataset_prefilled_shuffled')
-			#test_text = load_from_disk('/home/bbadger/experiments/bird_dev_dataset_completion')
-		else:
-			split_index=200
-			train_text, test_text = dataset.skip(split_index), dataset.take(split_index)
+		split_index=200
+		train_text, test_text = dataset.skip(split_index), dataset.take(split_index)
+
+	print ('dataset loaded')
+	# only take dataset items that fit in context
+	train_text = train_text.filter(lambda x: len(tokenizer.encode(x['messages'][0]['content'])) < data_args.max_seq_length - 256)
+	test_text = test_text.filter(lambda x: len(tokenizer.encode(x['messages'][0]['content'])) < data_args.max_seq_length - 256)
 
 	#todo: 8-bit optims fail to send params from cpu during the backward, see if this can be debugged
 	training_args.max_seq_length = data_args.max_seq_length
@@ -205,25 +186,16 @@ def main(model_args, data_args, training_args):
 		if key in config.__dict__.keys():
 			config.__dict__[key] = training_args.__dict__[key]
 
-	print (config)
-	#print (dataset[0]['messages'][0]['content'])
 	trainer = SFTTrainer(
 	    model = model,
 	    train_dataset = train_text,
 	    eval_dataset = test_text,
-            tokenizer = tokenizer,
+        tokenizer = tokenizer,
 	    args = config,
 	    #data_collator = DataCollatorForCausalLM(tokenizer, mlm=False)  #data_collator,
 	    data_collator=data_collator,
             formatting_func=formatting_func
 	)
-
-	# trainer.accelerator.print(f"{trainer.model}")
-	# trainer.model.print_trainable_parameters()
-
-	# saving final model
-#	if trainer.is_fsdp_enabled:
-#	    trainer.accelerator.state.fsdp_plugin.set_state_dict_type("FULL_STATE_DICT")
 
 	checkpoint=None
 	if training_args.resume_from_checkpoint:
@@ -238,7 +210,6 @@ def main(model_args, data_args, training_args):
 	model.save_pretrained_merged(training_args.output_dir + '/merged_model', tokenizer, save_method = "merged_16bit",)
 	model.save_pretrained_merged(training_args.output_dir + '/merged_model_4bit', tokenizer, save_method = "merged_4bit",)
 	print (f"Model saved to {training_args.output_dir + '/merged_model'}")
-	#trainer.save_model()
 
 
 if __name__ == "__main__":
