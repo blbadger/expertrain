@@ -186,7 +186,8 @@ def main(model_args, data_args, training_args):
 			train_text = dataset
 			#print (train_text[0], train_text[1])
 			#print ('\n\n', test_text[-2], test_text[-1])
-			test_text = load_from_disk('/home/bbadger/experiments/bird_dev_dataset_completion')
+			test_text = load_from_disk('/home/bbadger/Desktop/birds/bird/llm/data/dev_dataset_prefilled_shuffled')
+			#test_text = load_from_disk('/home/bbadger/experiments/bird_dev_dataset_completion')
 		else:
 			split_index=200
 			train_text, test_text = dataset.skip(split_index), dataset.take(split_index)
