@@ -1,8 +1,8 @@
 python unsloth_train.py \
 --seed 100 \
 --model_name_or_path "unsloth/Qwen2.5-Coder-14B-Instruct" \
---dataset_path "/home/bbadger/Desktop/birds/bird/llm/data/train_dataset_prefilled_extended" \
---eval_dataset_path "/home/bbadger/Desktop/birds/bird/llm/data/dev_dataset_prefilled_extended" \
+--dataset_path "/home/bbadger/Desktop/birds/bird/llm/data/train_dataset_prefilled_examples" \
+--eval_dataset_path "/home/bbadger/Desktop/birds/bird/llm/data/dev_dataset_prefilled_examples" \
 --add_special_tokens False \
 --append_concat_token False \
 --max_seq_length 4096 \
