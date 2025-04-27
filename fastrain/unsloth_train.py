@@ -70,6 +70,9 @@ class DataTrainingArguments:
 	dataset_path: Optional[str] = field(
 		default=None
 		)
+	eval_dataset_path: Optional[str] = field(
+		default=None
+		)
 	packing: Optional[bool] = field(
 		default=False
 		)
