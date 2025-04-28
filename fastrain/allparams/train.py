@@ -174,10 +174,6 @@ def main(model_args, data_args, training_args):
 		collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
 	else:
-		mock = [
-			{"role": "user", "content":"@|@"},
-			{"role": "assistant", "content":"@|@"},
-		]
 		#response_template = tokenizer.decode(tokenizer.apply_chat_template(mock)).split("@|@")[1]
 		response_template = '###'
 		print (f"Response template: {response_template}")
@@ -186,13 +182,19 @@ def main(model_args, data_args, training_args):
 			tokenizer=tokenizer, 
 			mlm=False
 		)
-		#data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
+
 		if 'bird' in str(data_path):
 			train_text = dataset
-			test_text = load_from_disk('/home/bbadger/experiments/bird_dev_dataset_completion')
+			test_text = load_from_disk(args.eval_dataset_path)
 		else:
 			split_index=200
 			train_text, test_text = dataset.skip(split_index), dataset.take(split_index)
+
+
+	print ('dataset loaded')
+	# only take dataset items that fit in context
+	train_text = train_text.filter(lambda x: len(tokenizer.encode(x['messages'][0]['content'])) < data_args.max_seq_length - 256)
+	test_text = test_text.filter(lambda x: len(tokenizer.encode(x['messages'][0]['content'])) < data_args.max_seq_length - 256)
 
 	training_args.packing=False
 	training_args.dataset_text_field=data_args.dataset_text_field
