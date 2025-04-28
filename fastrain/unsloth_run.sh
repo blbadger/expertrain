@@ -1,12 +1,12 @@
 python unsloth_train.py \
 --seed 100 \
 --model_name_or_path "unsloth/Qwen2.5-Coder-14B-Instruct" \
---dataset_path "/home/bbadger/Desktop/birds/bird/llm/data/train_dataset_prefilled_examples" \
---eval_dataset_path "/home/bbadger/Desktop/birds/bird/llm/data/dev_dataset_prefilled_examples" \
+--dataset_path "/home/bbadger/Desktop/birds/bird/llm/data/train_dataset_prefilled_examples_descriptions" \
+--eval_dataset_path "/home/bbadger/Desktop/birds/bird/llm/data/dev_dataset_prefilled_examples_descriptions" \
 --add_special_tokens False \
 --append_concat_token False \
---max_seq_length 4096 \
---num_train_epochs 3 \
+--max_seq_length 6000 \
+--num_train_epochs 1 \
 --logging_steps 20 \
 --log_level "info" \
 --logging_strategy "steps" \
@@ -21,7 +21,7 @@ python unsloth_train.py \
 --weight_decay 0.0 \
 --warmup_ratio 0.1 \
 --max_grad_norm 1.0 \
---output_dir "/home/bbadger/experiments/qwen-14b-bird-examples" \
+--output_dir "/home/bbadger/experiments/qwen-14b-bird-examples-descriptions" \
 --per_device_train_batch_size 1 \
 --per_device_eval_batch_size 1 \
 --gradient_accumulation_steps 16 \
