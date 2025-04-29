@@ -67,6 +67,9 @@ class DataTrainingArguments:
 	dataset_path: Optional[str] = field(
 		default=None
 		)
+	eval_dataset_path: Optional[str] = field(
+		default=None
+		)
 	#packing: Optional[bool] = field(
 	#	default=False
 	#	)
@@ -150,6 +153,7 @@ def main(model_args, data_args, training_args):
 		training_args.gradient_checkpointing_kwargs = {"use_reentrant": model_args.use_reentrant}
 
 	data_path = data_args.dataset_path
+	eval_data_path = data_args.eval_dataset_path
 
 	if 'cots' in data_path:
 		dataset = load_dataset("open-r1/codeforces-cots", "solutions_decontaminated", split="train[:300]")
@@ -185,7 +189,7 @@ def main(model_args, data_args, training_args):
 
 		if 'bird' in str(data_path):
 			train_text = dataset
-			test_text = load_from_disk(args.eval_dataset_path)
+			test_text = load_from_disk(eval_data_path)
 		else:
 			split_index=200
 			train_text, test_text = dataset.skip(split_index), dataset.take(split_index)

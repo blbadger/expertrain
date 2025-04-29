@@ -1,7 +1,7 @@
 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
 OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_allparams.yaml" train.py \
 --seed 100 \
---model_name_or_path "Qwen/Qwen2.5-Coder-14B-Instruct" \
+--model_name_or_path "unsloth/Qwen2.5-Coder-32B-Instruct" \
 --dataset_path "/home/badger/birds/bird/llm/data/train_dataset_prefilled_examples" \
 --eval_dataset_path "/home/badger/birds/bird/llm/data/dev_dataset_prefilled_examples" \
 --add_special_tokens False \
@@ -11,22 +11,21 @@ OMP_NUM_THREADS=8 accelerate launch --config_file "configs/fsdp_config_allparams
 --logging_steps 10 \
 --log_level "info" \
 --logging_strategy "steps" \
---evaluation_strategy "steps" \
+--eval_strategy "steps" \
 --eval_steps 100 \
---save_strategy "steps" \
 --save_strategy "epoch" \
---bf16 False \
---fp16 True \
---learning_rate 1e-5 \
+--bf16 True \
+--fp16 False \
+--learning_rate 5e-6 \
 --lr_scheduler_type "cosine" \
 --weight_decay 0.0 \
 --warmup_ratio 0.1 \
 --max_grad_norm 1.0 \
---output_dir "/home/badger/qwen-14b-bird-examples-allparams" \
---per_device_train_batch_size 4 \
---per_device_eval_batch_size 4 \
+--output_dir "/home/badger/qwen-32b-bird-examples-allparams" \
+--per_device_train_batch_size 1 \
+--per_device_eval_batch_size 1 \
 --gradient_checkpointing True \
---gradient_accumulation_steps 1 \
+--gradient_accumulation_steps 4 \
 --dataset_text_field "messages" \
 --use_flash_attn False \
 --use_peft_lora False \
